@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PetFeeder — Entrar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js" defer></script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body class="auth-body">
+
+  <aside class="auth-side" aria-hidden="true">
+    <div class="auth-side__inner">
+      <div class="auth-side__logo">🐾</div>
+      <h1 class="auth-side__title">PetFeeder</h1>
+      <p class="auth-side__sub">Alimentação automática inteligente para o seu pet, controlada de qualquer lugar.</p>
+      <ul class="auth-side__features">
+        <li><i class="ph ph-clock"></i> Horários automáticos</li>
+        <li><i class="ph ph-scales"></i> Pesagem em malha fechada</li>
+        <li><i class="ph ph-wifi-high"></i> Controle remoto via app</li>
+        <li><i class="ph ph-chart-line-up"></i> Histórico de consumo</li>
+        <li><i class="ph ph-warning-circle"></i> Alertas de nível do reservatório</li>
+      </ul>
+    </div>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-card">
+
+      <div id="auth-msg" class="auth-msg" hidden></div>
+
+      <div class="auth-header">
+        <span class="auth-logo">🐾</span>
+        <h2>Bem-vindo de volta</h2>
+        <p>Entre com sua conta para controlar a alimentação</p>
+      </div>
+
+      <div class="form-group">
+        <label for="login-email" class="form-label">E-mail <span class="req">*</span></label>
+        <input type="email" id="login-email" class="form-input" placeholder="seu@email.com" autocomplete="email"/>
+      </div>
+
+      <div class="form-group">
+        <label for="login-pass" class="form-label">Senha <span class="req">*</span></label>
+        <div class="input-pw">
+          <input type="password" id="login-pass" class="form-input" placeholder="Sua senha" autocomplete="current-password"/>
+          <button class="btn-eye" data-target="login-pass" type="button">
+            <i class="ph ph-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <button class="btn btn--primary" id="btn-login">
+        <i class="ph ph-sign-in"></i>
+        <span id="btn-login-txt">Entrar</span>
+      </button>
+
+      <div class="auth-divider"><span>ou</span></div>
+
+      <p class="auth-switch">
+        Não tem conta? <button class="link-btn" onclick="location.href='cadastro.html'">Criar conta</button>
+      </p>
+
+    </div>
+  </main>
+
+  <script type="module">
+    import { auth } from './firebase-config.js';
+    import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    onAuthStateChanged(auth, user => {
+      if (user) window.location.href = 'index.html';
+    });
+
+    function showMsg(txt, tipo = 'err') {
+      const el = document.getElementById('auth-msg');
+      el.textContent = txt;
+      el.className = `auth-msg auth-msg--${tipo}`;
+      el.hidden = false;
+      setTimeout(() => { el.hidden = true; }, 4500);
+    }
+
+    // Toggle senha
+    document.querySelectorAll('.btn-eye').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const inp = document.getElementById(btn.dataset.target);
+        inp.type = inp.type === 'text' ? 'password' : 'text';
+        btn.querySelector('i').className = inp.type === 'text' ? 'ph ph-eye-slash' : 'ph ph-eye';
+      });
+    });
+
+    async function doLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const senha = document.getElementById('login-pass').value;
+      if (!email || !senha) { showMsg('Preencha e-mail e senha.'); return; }
+
+      const btn = document.getElementById('btn-login');
+      const txt = document.getElementById('btn-login-txt');
+      btn.disabled = true; txt.textContent = 'Entrando...';
+
+      try {
+        await signInWithEmailAndPassword(auth, email, senha);
+        // onAuthStateChanged redireciona
+      } catch (err) {
+        const msgs = {
+          'auth/user-not-found':   'E-mail não cadastrado.',
+          'auth/wrong-password':   'Senha incorreta.',
+          'auth/invalid-email':    'E-mail inválido.',
+          'auth/too-many-requests':'Muitas tentativas. Tente novamente mais tarde.',
+          'auth/invalid-credential': 'E-mail ou senha incorretos.',
+        };
+        showMsg(msgs[err.code] || 'Erro ao entrar. Tente novamente.');
+      } finally {
+        btn.disabled = false; txt.textContent = 'Entrar';
+      }
+    }
+
+    document.getElementById('btn-login').addEventListener('click', doLogin);
+    ['login-email','login-pass'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    });
+  </script>
+</body>
+</html>
