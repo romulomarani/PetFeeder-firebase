@@ -73,7 +73,7 @@ function goTo(pageId) {
     b.classList.toggle('active', b.dataset.page === pageId);
   });
   if (pageId === 'home')    refreshHome();
-  if (pageId === 'feed')    loadHorarios();
+  if (pageId === 'feed') { loadHorarios(); renderHorarios(); }
   if (pageId === 'history') loadHistorico();
 }
 
@@ -218,10 +218,11 @@ function startListeners() {
   // Horários
   const horRef = ref(db, `users/${S.uid}/pets/${S.petId}/horarios`);
   const unsubHor = onValue(horRef, snap => {
-    S.horarios = snap.val() || {};
-    renderHorarios();
-    updateNextFeed();
-  });
+  S.horarios = snap.val() || {};
+  renderHorarios();
+  updateNextFeed();
+  renderKPIs();
+});
   S.listeners.push(unsubHor);
 
   // Histórico (últimos 50)
@@ -417,6 +418,7 @@ function initFeedPage() {
 
 function loadHorarios() {
   renderHorarios();
+  updateNextFeed();
 }
 
 function renderHorarios() {
