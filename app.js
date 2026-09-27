@@ -282,12 +282,13 @@ function updateTelemetriaUI() {
     stEl.innerHTML = `<i class="ph ${st.ico}"></i> <span id="equip-status-txt">${t.status_equipamento || 'OCIOSO'}</span>`;
   }
 
-  // Banner de erro
+    // Banner de erro
   const errBanner = document.getElementById('error-banner');
-  if (t.status_equipamento === 'ERRO_VAZIO' || t.status_equipamento === 'ERRO_OBSTRUCAO') {
-    document.getElementById('error-title').textContent = t.status_equipamento === 'ERRO_VAZIO'
+  const statusEq  = String(t.status_equipamento || '').trim().toUpperCase();
+  if (statusEq === 'ERRO_VAZIO' || statusEq === 'ERRO_OBSTRUCAO') {
+    document.getElementById('error-title').textContent = statusEq === 'ERRO_VAZIO'
       ? 'Reservatório vazio' : 'Obstrução mecânica detectada';
-    document.getElementById('error-msg').textContent = t.status_equipamento === 'ERRO_VAZIO'
+    document.getElementById('error-msg').textContent = statusEq === 'ERRO_VAZIO'
       ? 'O silo ficou sem ração durante a dosagem. Reabasteça o reservatório e clique em Resetar.'
       : 'O fuso não conseguiu transportar a ração. Verifique se há obstáculos e clique em Resetar.';
     errBanner.hidden = false;
