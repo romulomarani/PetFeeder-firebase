@@ -45,8 +45,18 @@ async function loadUserData() {
   S.pets = petsSnap.val() || {};
 
   const petAtivoSnap = await get(ref(db, `users/${S.uid}/petAtivo`));
-  S.petId = petAtivoSnap.val() || Object.keys(S.pets)[0] || null;
+  let petAtivo = petAtivoSnap.val();
 
+  // Se não tem petAtivo salvo ou o pet não existe mais, usa o primeiro
+  if (!petAtivo || !S.pets[petAtivo]) {
+    petAtivo = Object.keys(S.pets)[0] || null;
+    // Salva o petAtivo correto no Firebase
+    if (petAtivo) {
+      await set(ref(db, `users/${S.uid}/petAtivo`), petAtivo);
+    }
+  }
+
+  S.petId = petAtivo;
   updatePetUI();
 }
 
