@@ -1,236 +1,114 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PetFeeder — Criar conta</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js" defer></script>
-  <link rel="stylesheet" href="style.css"/>
-</head>
-<body class="auth-body">
+<script type="module">
+  import { auth, db } from './firebase-config.js';
+  import { createUserWithEmailAndPassword, updateProfile, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { ref, set }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-  <aside class="auth-side" aria-hidden="true">
-    <div class="auth-side__inner">
-      <div class="auth-side__logo">🐾</div>
-      <h1 class="auth-side__title">PetFeeder</h1>
-      <p class="auth-side__sub">Configure sua conta em menos de 2 minutos.</p>
-      <ul class="auth-side__features">
-        <li><i class="ph ph-user-plus"></i> Crie seu perfil</li>
-        <li><i class="ph ph-dog"></i> Cadastre seu pet</li>
-        <li><i class="ph ph-clock"></i> Programe os horários</li>
-        <li><i class="ph ph-chart-bar"></i> Acompanhe o histórico</li>
-      </ul>
-    </div>
-  </aside>
+  // Só redireciona se já estava logado ANTES de abrir a página
+  let recemCriou = false;
+  onAuthStateChanged(auth, user => {
+    if (user && !recemCriou) window.location.href = 'index.html';
+  });
 
-  <main class="auth-main">
-    <div class="auth-card">
+  function showMsg(txt, tipo = 'err') {
+    const el = document.getElementById('auth-msg');
+    el.textContent = txt; el.className = `auth-msg auth-msg--${tipo}`; el.hidden = false;
+    setTimeout(() => { el.hidden = true; }, 4500);
+  }
 
-      <div id="auth-msg" class="auth-msg" hidden></div>
+  let selectedColor = '#2563eb';
+  let selectedTipo  = 'cachorro';
 
-      <div class="auth-header">
-        <span class="auth-logo">🐾</span>
-        <h2>Criar conta</h2>
-        <p>Configure seu perfil e adicione seu primeiro pet</p>
-      </div>
-
-      <!-- Etapas -->
-      <div class="steps-bar">
-        <div class="step-item active" id="si-1">
-          <div class="step-circle">1</div><span>Conta</span>
-        </div>
-        <div class="step-line"></div>
-        <div class="step-item" id="si-2">
-          <div class="step-circle">2</div><span>Pet</span>
-        </div>
-      </div>
-
-      <!-- ETAPA 1 -->
-      <div id="step-1">
-        <div class="form-group">
-          <label for="reg-nome" class="form-label">Nome <span class="req">*</span></label>
-          <input type="text" id="reg-nome" class="form-input" placeholder="Seu nome"/>
-        </div>
-        <div class="form-group">
-          <label for="reg-email" class="form-label">E-mail <span class="req">*</span></label>
-          <input type="email" id="reg-email" class="form-input" placeholder="seu@email.com" autocomplete="email"/>
-        </div>
-        <div class="form-group">
-          <label for="reg-pass" class="form-label">Senha <span class="req">*</span></label>
-          <div class="input-pw">
-            <input type="password" id="reg-pass" class="form-input" placeholder="Mínimo 6 caracteres"/>
-            <button class="btn-eye" data-target="reg-pass" type="button"><i class="ph ph-eye"></i></button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="reg-pass2" class="form-label">Confirmar senha <span class="req">*</span></label>
-          <div class="input-pw">
-            <input type="password" id="reg-pass2" class="form-input" placeholder="Repita a senha"/>
-            <button class="btn-eye" data-target="reg-pass2" type="button"><i class="ph ph-eye"></i></button>
-          </div>
-        </div>
-        <button class="btn btn--primary" id="btn-next">
-          Próximo <i class="ph ph-arrow-right"></i>
-        </button>
-      </div>
-
-      <!-- ETAPA 2 -->
-      <div id="step-2" hidden>
-        <div class="form-group">
-          <label for="pet-nome" class="form-label">Nome do pet <span class="req">*</span></label>
-          <input type="text" id="pet-nome" class="form-input" placeholder="Ex: Thor, Luna, Mimi..."/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Tipo</label>
-          <div class="tipo-sel" id="tipo-sel">
-            <button class="tipo-btn active" data-tipo="cachorro" type="button">🐕 Cachorro</button>
-            <button class="tipo-btn" data-tipo="gato" type="button">🐈 Gato</button>
-            <button class="tipo-btn" data-tipo="outro" type="button">🐾 Outro</button>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="pet-peso" class="form-label">Peso (kg) <span class="opt">opcional</span></label>
-            <input type="number" id="pet-peso" class="form-input" placeholder="Ex: 8.5" min="0.1" max="100" step="0.1"/>
-          </div>
-          <div class="form-group">
-            <label for="pet-idade" class="form-label">Idade (anos) <span class="opt">opcional</span></label>
-            <input type="number" id="pet-idade" class="form-input" placeholder="Ex: 3" min="0" max="30"/>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Cor do avatar</label>
-          <div class="color-picker" id="reg-colors">
-            <button class="color-dot active" data-color="#2563eb" style="background:#2563eb" type="button"></button>
-            <button class="color-dot" data-color="#16a34a" style="background:#16a34a" type="button"></button>
-            <button class="color-dot" data-color="#ea580c" style="background:#ea580c" type="button"></button>
-            <button class="color-dot" data-color="#dc2626" style="background:#dc2626" type="button"></button>
-            <button class="color-dot" data-color="#9333ea" style="background:#9333ea" type="button"></button>
-            <button class="color-dot" data-color="#0891b2" style="background:#0891b2" type="button"></button>
-          </div>
-        </div>
-        <div class="btn-row">
-          <button class="btn btn--ghost" id="btn-back" type="button">
-            <i class="ph ph-arrow-left"></i> Voltar
-          </button>
-          <button class="btn btn--primary" id="btn-register" type="button">
-            <i class="ph ph-check-circle"></i> Criar conta
-          </button>
-        </div>
-      </div>
-
-      <div class="auth-divider"><span>ou</span></div>
-      <p class="auth-switch">Já tem conta? <button class="link-btn" onclick="location.href='login.html'">Entrar</button></p>
-
-    </div>
-  </main>
-
-  <script type="module">
-    import { auth, db } from './firebase-config.js';
-    import { createUserWithEmailAndPassword, updateProfile, onAuthStateChanged }
-      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { ref, set }
-      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-    onAuthStateChanged(auth, user => {
-      if (user) window.location.href = 'index.html';
+  document.querySelectorAll('.btn-eye').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const inp = document.getElementById(btn.dataset.target);
+      inp.type = inp.type === 'text' ? 'password' : 'text';
+      btn.querySelector('i').className = inp.type === 'text' ? 'ph ph-eye-slash' : 'ph ph-eye';
     });
+  });
 
-    function showMsg(txt, tipo = 'err') {
-      const el = document.getElementById('auth-msg');
-      el.textContent = txt; el.className = `auth-msg auth-msg--${tipo}`; el.hidden = false;
-      setTimeout(() => { el.hidden = true; }, 4500);
+  document.querySelectorAll('#reg-colors .color-dot').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#reg-colors .color-dot').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active'); selectedColor = btn.dataset.color;
+    });
+  });
+
+  document.querySelectorAll('#tipo-sel .tipo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#tipo-sel .tipo-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active'); selectedTipo = btn.dataset.tipo;
+    });
+  });
+
+  document.getElementById('btn-next').addEventListener('click', () => {
+    const nome  = document.getElementById('reg-nome').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const pass  = document.getElementById('reg-pass').value;
+    const pass2 = document.getElementById('reg-pass2').value;
+    if (!nome)           { showMsg('Informe seu nome.'); return; }
+    if (!email)          { showMsg('Informe o e-mail.'); return; }
+    if (pass.length < 6) { showMsg('Senha precisa ter ao menos 6 caracteres.'); return; }
+    if (pass !== pass2)  { showMsg('As senhas não coincidem.'); return; }
+    document.getElementById('step-1').hidden = true;
+    document.getElementById('step-2').hidden = false;
+    document.getElementById('si-1').classList.remove('active');
+    document.getElementById('si-2').classList.add('active');
+  });
+
+  document.getElementById('btn-back').addEventListener('click', () => {
+    document.getElementById('step-2').hidden = true;
+    document.getElementById('step-1').hidden = false;
+    document.getElementById('si-2').classList.remove('active');
+    document.getElementById('si-1').classList.add('active');
+  });
+
+  document.getElementById('btn-register').addEventListener('click', async () => {
+    const petNome = document.getElementById('pet-nome').value.trim();
+    if (!petNome) { showMsg('Informe o nome do pet.'); return; }
+
+    const email = document.getElementById('reg-email').value.trim();
+    const pass  = document.getElementById('reg-pass').value;
+    const nome  = document.getElementById('reg-nome').value.trim();
+    const peso  = parseFloat(document.getElementById('pet-peso').value) || null;
+    const idade = parseInt(document.getElementById('pet-idade').value)  || null;
+
+    const btn = document.getElementById('btn-register');
+    btn.disabled = true; btn.textContent = 'Criando conta...';
+
+    try {
+      recemCriou = true; // bloqueia o redirecionamento automático
+
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      await updateProfile(cred.user, { displayName: nome });
+
+      const petId  = Date.now().toString();
+      const petData = {
+        nome: petNome, tipo: selectedTipo,
+        peso, idade, cor: selectedColor,
+        criadoEm: new Date().toISOString(),
+      };
+
+      // Salva tudo antes de redirecionar
+      await set(ref(db, `users/${cred.user.uid}/perfil`),            { nome, email });
+      await set(ref(db, `users/${cred.user.uid}/pets/${petId}`),      petData);
+      await set(ref(db, `users/${cred.user.uid}/petAtivo`),           petId);
+
+      showMsg('Conta criada! Redirecionando...', 'ok');
+      setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+
+    } catch (err) {
+      recemCriou = false;
+      const msgs = {
+        'auth/email-already-in-use': 'E-mail já cadastrado.',
+        'auth/invalid-email':        'E-mail inválido.',
+        'auth/weak-password':        'Senha muito fraca.',
+      };
+      showMsg(msgs[err.code] || 'Erro ao criar conta.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ph ph-check-circle"></i> Criar conta';
     }
-
-    let selectedColor = '#2563eb';
-    let selectedTipo  = 'cachorro';
-
-    document.querySelectorAll('.btn-eye').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const inp = document.getElementById(btn.dataset.target);
-        inp.type = inp.type === 'text' ? 'password' : 'text';
-        btn.querySelector('i').className = inp.type === 'text' ? 'ph ph-eye-slash' : 'ph ph-eye';
-      });
-    });
-
-    document.querySelectorAll('#reg-colors .color-dot').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#reg-colors .color-dot').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active'); selectedColor = btn.dataset.color;
-      });
-    });
-
-    document.querySelectorAll('#tipo-sel .tipo-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#tipo-sel .tipo-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active'); selectedTipo = btn.dataset.tipo;
-      });
-    });
-
-    document.getElementById('btn-next').addEventListener('click', () => {
-      const nome  = document.getElementById('reg-nome').value.trim();
-      const email = document.getElementById('reg-email').value.trim();
-      const pass  = document.getElementById('reg-pass').value;
-      const pass2 = document.getElementById('reg-pass2').value;
-      if (!nome)             { showMsg('Informe seu nome.'); return; }
-      if (!email)            { showMsg('Informe o e-mail.'); return; }
-      if (pass.length < 6)   { showMsg('Senha precisa ter ao menos 6 caracteres.'); return; }
-      if (pass !== pass2)    { showMsg('As senhas não coincidem.'); return; }
-      document.getElementById('step-1').hidden = true;
-      document.getElementById('step-2').hidden = false;
-      document.getElementById('si-1').classList.remove('active');
-      document.getElementById('si-2').classList.add('active');
-    });
-
-    document.getElementById('btn-back').addEventListener('click', () => {
-      document.getElementById('step-2').hidden = true;
-      document.getElementById('step-1').hidden = false;
-      document.getElementById('si-2').classList.remove('active');
-      document.getElementById('si-1').classList.add('active');
-    });
-
-    document.getElementById('btn-register').addEventListener('click', async () => {
-      const petNome  = document.getElementById('pet-nome').value.trim();
-      if (!petNome) { showMsg('Informe o nome do pet.'); return; }
-
-      const email = document.getElementById('reg-email').value.trim();
-      const pass  = document.getElementById('reg-pass').value;
-      const nome  = document.getElementById('reg-nome').value.trim();
-      const peso  = parseFloat(document.getElementById('pet-peso').value)  || null;
-      const idade = parseInt(document.getElementById('pet-idade').value)    || null;
-
-      const btn = document.getElementById('btn-register');
-      btn.disabled = true; btn.textContent = 'Criando conta...';
-
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        await updateProfile(cred.user, { displayName: nome });
-
-        const petId = Date.now().toString();
-        await set(ref(db, `users/${cred.user.uid}/perfil`), { nome, email });
-        await set(ref(db, `users/${cred.user.uid}/pets/${petId}`), {
-          nome: petNome, tipo: selectedTipo,
-          peso: peso, idade: idade, cor: selectedColor,
-          criadoEm: new Date().toISOString(),
-        });
-
-        // Estrutura inicial do Firebase
-        await set(ref(db, `users/${cred.user.uid}/petAtivo`), petId);
-        showMsg('Conta criada! Redirecionando...', 'ok');
-        setTimeout(() => { window.location.href = 'index.html'; }, 1200);
-      } catch (err) {
-        const msgs = {
-          'auth/email-already-in-use': 'E-mail já cadastrado.',
-          'auth/invalid-email':        'E-mail inválido.',
-          'auth/weak-password':        'Senha muito fraca.',
-        };
-        showMsg(msgs[err.code] || 'Erro ao criar conta.');
-      } finally {
-        btn.disabled = false; btn.innerHTML = '<i class="ph ph-check-circle"></i> Criar conta';
-      }
-    });
-  </script>
-</body>
-</html>
+  });
+</script>
