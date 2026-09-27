@@ -259,6 +259,7 @@ a  { text-decoration: none; color: inherit; }
   margin-bottom: .75rem; animation: fadeUp .2s ease;
   display: flex; align-items: flex-start; gap: .65rem;
 }
+.error-banner[hidden] { display: none !important; }
 .error-banner__icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
 .error-banner__body { flex: 1; }
 .error-banner__title { font-size: .88rem; font-weight: 700; color: var(--red); }
