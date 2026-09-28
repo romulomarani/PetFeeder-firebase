@@ -46,6 +46,7 @@
         </div>
       </div>
 
+      <!-- ETAPA 1 -->
       <div id="step-1">
         <div class="form-group">
           <label for="reg-nome" class="form-label">Nome <span class="req">*</span></label>
@@ -69,11 +70,19 @@
             <button class="btn-eye" data-target="reg-pass2" type="button"><i class="ph ph-eye"></i></button>
           </div>
         </div>
+        <div class="form-group">
+          <label for="reg-dica" class="form-label">
+            Dica de senha <span class="opt">opcional — para lembrar depois</span>
+          </label>
+          <input type="text" id="reg-dica" class="form-input" placeholder='Ex: "nome do pet + ano de nascimento"'/>
+          <span class="hint">Aparece em "Esqueceu a senha?" — não coloque a senha em si</span>
+        </div>
         <button class="btn btn--primary" id="btn-next" type="button">
           Próximo <i class="ph ph-arrow-right"></i>
         </button>
       </div>
 
+      <!-- ETAPA 2 -->
       <div id="step-2" hidden>
         <div class="form-group">
           <label for="pet-nome" class="form-label">Nome do pet <span class="req">*</span></label>
@@ -203,6 +212,7 @@
         const email = document.getElementById('reg-email').value.trim();
         const pass  = document.getElementById('reg-pass').value;
         const nome  = document.getElementById('reg-nome').value.trim();
+        const dica  = document.getElementById('reg-dica').value.trim();
         const peso  = parseFloat(document.getElementById('pet-peso').value) || null;
         const idade = parseInt(document.getElementById('pet-idade').value)  || null;
 
@@ -226,6 +236,12 @@
           await set(ref(db, `users/${cred.user.uid}/perfil`),       { nome, email });
           await set(ref(db, `users/${cred.user.uid}/pets/${petId}`), petData);
           await set(ref(db, `users/${cred.user.uid}/petAtivo`),      petId);
+
+          // Salva a dica de senha indexada pelo e-mail
+          if (dica) {
+            const emailKey = email.replace(/\./g, '_').replace(/@/g, '_at_');
+            await set(ref(db, `dicas/${emailKey}`), dica);
+          }
 
           showMsg('Conta criada! Redirecionando...', 'ok');
           setTimeout(() => { window.location.href = 'index.html'; }, 1200);
