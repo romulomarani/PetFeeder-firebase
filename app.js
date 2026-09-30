@@ -45,18 +45,8 @@ async function loadUserData() {
   S.pets = petsSnap.val() || {};
 
   const petAtivoSnap = await get(ref(db, `users/${S.uid}/petAtivo`));
-  let petAtivo = petAtivoSnap.val();
+  S.petId = petAtivoSnap.val() || Object.keys(S.pets)[0] || null;
 
-  // Se não tem petAtivo salvo ou o pet não existe mais, usa o primeiro
-  if (!petAtivo || !S.pets[petAtivo]) {
-    petAtivo = Object.keys(S.pets)[0] || null;
-    // Salva o petAtivo correto no Firebase
-    if (petAtivo) {
-      await set(ref(db, `users/${S.uid}/petAtivo`), petAtivo);
-    }
-  }
-
-  S.petId = petAtivo;
   updatePetUI();
 }
 
@@ -83,7 +73,7 @@ function goTo(pageId) {
     b.classList.toggle('active', b.dataset.page === pageId);
   });
   if (pageId === 'home')    refreshHome();
-  if (pageId === 'feed') { loadHorarios(); renderHorarios(); }
+  if (pageId === 'feed')    loadHorarios();
   if (pageId === 'history') loadHistorico();
 }
 
@@ -228,11 +218,10 @@ function startListeners() {
   // Horários
   const horRef = ref(db, `users/${S.uid}/pets/${S.petId}/horarios`);
   const unsubHor = onValue(horRef, snap => {
-  S.horarios = snap.val() || {};
-  renderHorarios();
-  updateNextFeed();
-  renderKPIs();
-});
+    S.horarios = snap.val() || {};
+    renderHorarios();
+    updateNextFeed();
+  });
   S.listeners.push(unsubHor);
 
   // Histórico (últimos 50)
@@ -292,13 +281,12 @@ function updateTelemetriaUI() {
     stEl.innerHTML = `<i class="ph ${st.ico}"></i> <span id="equip-status-txt">${t.status_equipamento || 'OCIOSO'}</span>`;
   }
 
-    // Banner de erro
+  // Banner de erro
   const errBanner = document.getElementById('error-banner');
-  const statusEq  = String(t.status_equipamento || '').trim().toUpperCase();
-  if (statusEq === 'ERRO_VAZIO' || statusEq === 'ERRO_OBSTRUCAO') {
-    document.getElementById('error-title').textContent = statusEq === 'ERRO_VAZIO'
+  if (t.status_equipamento === 'ERRO_VAZIO' || t.status_equipamento === 'ERRO_OBSTRUCAO') {
+    document.getElementById('error-title').textContent = t.status_equipamento === 'ERRO_VAZIO'
       ? 'Reservatório vazio' : 'Obstrução mecânica detectada';
-    document.getElementById('error-msg').textContent = statusEq === 'ERRO_VAZIO'
+    document.getElementById('error-msg').textContent = t.status_equipamento === 'ERRO_VAZIO'
       ? 'O silo ficou sem ração durante a dosagem. Reabasteça o reservatório e clique em Resetar.'
       : 'O fuso não conseguiu transportar a ração. Verifique se há obstáculos e clique em Resetar.';
     errBanner.hidden = false;
@@ -366,7 +354,7 @@ async function doFeed(gramas) {
 
   try {
     // Escreve comando no Firebase — ESP32 lê e executa
-    await set(ref(db, `dosador/comando`), {
+    await set(ref(db, `dosador/comandos`), {
       tipo:      'manual',
       gramas:    gramas,
       petId:     S.petId,
@@ -429,7 +417,6 @@ function initFeedPage() {
 
 function loadHorarios() {
   renderHorarios();
-  updateNextFeed();
 }
 
 function renderHorarios() {
