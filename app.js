@@ -210,7 +210,7 @@ function startListeners() {
   const unsubHb = onValue(hbRef, snap => {
     const ts = snap.val();
     if (!ts) { setStatus('offline'); return; }
-    const diff = Date.now() - ts;
+    const diff = Date.now() - (ts * 1000);
     setStatus(diff < 65000 ? 'online' : 'offline');
   });
   S.listeners.push(unsubHb);
