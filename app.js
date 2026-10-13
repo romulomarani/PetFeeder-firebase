@@ -23,6 +23,8 @@ const S = {
   dateFrom: null,
   dateTo:   null,
   listeners: [],
+  ultimoHeartbeat: 0,
+  hbTimer: null,
 };
 
 /* ── AUTENTICAÇÃO ─────────────────────────────────────────── */
@@ -206,14 +208,17 @@ function startListeners() {
   S.listeners.push(unsubTel);
 
   // Heartbeat (online/offline)
+  // O onValue só dispara quando o valor MUDA. Se a ESP32 desliga, o valor
+  // para de mudar e a tela ficava "online" para sempre. Agora guardamos o
+  // último heartbeat e reavaliamos a idade dele a cada 5 s com um timer.
   const hbRef = ref(db, `dosador/telemetria/ultimo_heartbeat`);
   const unsubHb = onValue(hbRef, snap => {
-    const ts = snap.val();
-    if (!ts) { setStatus('offline'); return; }
-    const diff = Date.now() - (ts * 1000);
-    setStatus(diff < 65000 ? 'online' : 'offline');
+    S.ultimoHeartbeat = snap.val() || 0;
+    avaliarOnline();
   });
   S.listeners.push(unsubHb);
+  if (S.hbTimer) clearInterval(S.hbTimer);
+  S.hbTimer = setInterval(avaliarOnline, 5000);
 
   // Horários
   const horRef = ref(db, `users/${S.uid}/pets/${S.petId}/horarios`);
@@ -237,6 +242,15 @@ function startListeners() {
     renderKPIs();
   });
   S.listeners.push(unsubHist);
+}
+
+// A ESP32 envia telemetria (com heartbeat) a cada ~2 s; sem sinal por 20 s = offline
+const HEARTBEAT_LIMITE_MS = 20000;
+function avaliarOnline() {
+  const ts = S.ultimoHeartbeat;
+  if (!ts) { setStatus('offline'); return; }
+  const diff = Date.now() - (ts * 1000);
+  setStatus(diff < HEARTBEAT_LIMITE_MS ? 'online' : 'offline');
 }
 
 function setStatus(estado) {
@@ -274,6 +288,7 @@ function updateTelemetriaUI() {
     'DISPENSANDO':      { cls: 'dispensing', ico: 'ph-spinner' },
     'ERRO_VAZIO':       { cls: 'error',      ico: 'ph-x-circle' },
     'ERRO_OBSTRUCAO':   { cls: 'error',      ico: 'ph-x-circle' },
+    'ERRO_BALANCA':     { cls: 'error',      ico: 'ph-x-circle' },
   };
   const st = stMap[t.status_equipamento] || { cls: 'idle', ico: 'ph-check-circle' };
   if (stEl) {
@@ -283,12 +298,18 @@ function updateTelemetriaUI() {
 
   // Banner de erro
   const errBanner = document.getElementById('error-banner');
-  if (t.status_equipamento === 'ERRO_VAZIO' || t.status_equipamento === 'ERRO_OBSTRUCAO') {
-    document.getElementById('error-title').textContent = t.status_equipamento === 'ERRO_VAZIO'
-      ? 'Reservatório vazio' : 'Obstrução mecânica detectada';
-    document.getElementById('error-msg').textContent = t.status_equipamento === 'ERRO_VAZIO'
-      ? 'O silo ficou sem ração durante a dosagem. Reabasteça o reservatório e clique em Resetar.'
-      : 'O fuso não conseguiu transportar a ração. Verifique se há obstáculos e clique em Resetar.';
+  const errosMsg = {
+    'ERRO_VAZIO':     ['Reservatório vazio',
+                       'O silo ficou sem ração durante a dosagem. Reabasteça o reservatório e clique em Resetar.'],
+    'ERRO_OBSTRUCAO': ['Obstrução mecânica detectada',
+                       'O fuso não conseguiu transportar a ração. Verifique se há obstáculos e clique em Resetar.'],
+    'ERRO_BALANCA':   ['Balança sem resposta',
+                       'O módulo HX711 parou de enviar leituras. Verifique fios, alimentação e GND da balança e clique em Resetar.'],
+  };
+  if (errosMsg[t.status_equipamento]) {
+    const [tit, msg] = errosMsg[t.status_equipamento];
+    document.getElementById('error-title').textContent = tit;
+    document.getElementById('error-msg').textContent = msg;
     errBanner.hidden = false;
   } else {
     errBanner.hidden = true;
