@@ -427,7 +427,7 @@ function initFeedPage() {
 
     try {
       await push(ref(db, `users/${S.uid}/pets/${S.petId}/horarios`), {
-        hora, gramas, dias, ativo: true,
+        hora, gramas, dias: dias.join(','), ativo: true,
       });
       toast(`Horário ${hora} salvo!`, 'ok');
       document.getElementById('sched-time').value = '';
@@ -449,7 +449,9 @@ function renderHorarios() {
   if (!items.length) { empty.hidden = false; return; }
   empty.hidden = true;
   items.forEach(([key, h]) => {
-    const dias = Array.isArray(h.dias) ? h.dias : [];
+    const dias = typeof h.dias === 'string'
+      ? h.dias.split(',').filter(Boolean)
+      : (Array.isArray(h.dias) ? h.dias : Object.values(h.dias || {}));
     const daysLabel = dias.length === 7 ? 'Todos os dias' : dias.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
     const ativo = h.ativo !== false;
     const li = document.createElement('li');
