@@ -538,7 +538,7 @@ function renderHistorico() {
       <td><strong>${item.horaInicio || '—'}</strong></td>
       <td><strong>${item.gramas || '—'}g</strong></td>
       <td><span class="badge ${cons ? 'badge--ok' : 'badge--no'}">${cons ? '✔ Sim' : '✘ Não'}</span></td>
-      <td>${item.duracaoMin ? item.duracaoMin + ' min' : '—'}</td>
+      <td>${item.duracaoMin != null ? item.duracaoMin + ' min' : '—'}</td>
       <td><span class="badge ${item.tipo === 'auto' ? 'badge--auto' : 'badge--man'}">${item.tipo === 'auto' ? 'Auto' : 'Manual'}</span></td>`;
     tbody.appendChild(tr);
   });
