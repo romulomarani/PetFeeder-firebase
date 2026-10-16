@@ -284,11 +284,12 @@ function updateTelemetriaUI() {
   const stEl  = document.getElementById('equip-status-badge');
   const stTxt = document.getElementById('equip-status-txt');
   const stMap = {
-    'OCIOSO':           { cls: 'idle',       ico: 'ph-check-circle' },
-    'DISPENSANDO':      { cls: 'dispensing', ico: 'ph-spinner' },
-    'ERRO_VAZIO':       { cls: 'error',      ico: 'ph-x-circle' },
-    'ERRO_OBSTRUCAO':   { cls: 'error',      ico: 'ph-x-circle' },
-    'ERRO_BALANCA':     { cls: 'error',      ico: 'ph-x-circle' },
+  'OCIOSO':               { cls: 'idle',       ico: 'ph-check-circle' },
+  'DISPENSANDO':          { cls: 'dispensing', ico: 'ph-spinner' },
+  'AGUARDANDO_CONSUMO':   { cls: 'dispensing', ico: 'ph-paw-print' },
+  'ERRO_VAZIO':           { cls: 'error',      ico: 'ph-x-circle' },
+  'ERRO_OBSTRUCAO':       { cls: 'error',      ico: 'ph-x-circle' },
+  'ERRO_BALANCA':         { cls: 'error',      ico: 'ph-x-circle' },
   };
   const st = stMap[t.status_equipamento] || { cls: 'idle', ico: 'ph-check-circle' };
   if (stEl) {
