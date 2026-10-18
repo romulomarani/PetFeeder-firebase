@@ -12,9 +12,19 @@
 </head>
 <body class="auth-body">
 
+  <!-- GALERIA ESQUERDA: cachorros -->
+  <div class="pet-gallery pet-gallery--left" aria-hidden="true">
+    <div class="pet-gallery__track" id="gallery-left"></div>
+  </div>
+
+  <!-- GALERIA DIREITA: gatos -->
+  <div class="pet-gallery pet-gallery--right" aria-hidden="true">
+    <div class="pet-gallery__track" id="gallery-right"></div>
+  </div>
+
   <aside class="auth-side" aria-hidden="true">
     <div class="auth-side__inner">
-      <img src="assets/logo-TCC.png" alt="PetFeeder" style="width:180px;max-width:100%;object-fit:contain;margin-bottom:1rem;mix-blend-mode:screen"/>
+      <img src="assets/logo-TCC.png" alt="PetFeeder" style="width:180px;max-width:100%;object-fit:contain;margin-bottom:1rem"/>
       <ul class="auth-side__features">
         <li><i class="ph ph-clock"></i> Horários automáticos</li>
         <li><i class="ph ph-scales"></i> Pesagem em malha fechada</li>
@@ -33,7 +43,7 @@
       <!-- TELA DE LOGIN -->
       <div id="tela-login">
         <div class="auth-header">
-          <img src="assets/logo-cachorro.png" alt="PetFeeder" style="height:60px;width:auto;object-fit:contain;margin-bottom:.5rem;mix-blend-mode:multiply"/>
+          <img src="assets/logo-cachorro.png" alt="PetFeeder" style="height:60px;width:auto;object-fit:contain;margin-bottom:.5rem"/>
           <h2>Bem-vindo de volta</h2>
           <p>Entre com sua conta para controlar a alimentação</p>
         </div>
@@ -197,8 +207,6 @@
         btn.innerHTML = '<i class="ph ph-spinner"></i> Buscando...';
 
         try {
-          // Busca a dica pelo e-mail — precisa achar o UID primeiro
-          // Como não temos o UID sem logar, salvamos a dica indexada pelo e-mail
           const emailKey = email.replace(/\./g, '_').replace(/@/g, '_at_');
           const snap = await get(ref(db, `dicas/${emailKey}`));
 
@@ -217,6 +225,45 @@
       });
 
     });
+  </script>
+
+  <!-- Galeria de pets -->
+  <script>
+    const dogsLeft = [
+      'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&q=80',
+      'https://images.unsplash.com/photo-1591946614720-90a587da4a36?w=600&q=80',
+      'https://images.unsplash.com/photo-1534361960057-19f4434a7176?w=600&q=80',
+      'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=600&q=80',
+      'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=600&q=80',
+    ];
+    const catsRight = [
+      'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=600&q=80',
+      'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&q=80',
+      'https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=600&q=80',
+      'https://images.unsplash.com/photo-1533743983669-94fa5c4338ec?w=600&q=80',
+      'https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?w=600&q=80',
+    ];
+
+    function startGallery(id, urls) {
+      const track = document.getElementById(id);
+      urls.forEach((url, i) => {
+        const img = document.createElement('img');
+        img.src = url;
+        img.className = 'pet-gallery__img' + (i === 0 ? ' active' : '');
+        img.alt = '';
+        track.appendChild(img);
+      });
+      let current = 0;
+      setInterval(() => {
+        const imgs = track.querySelectorAll('.pet-gallery__img');
+        imgs[current].classList.remove('active');
+        current = (current + 1) % imgs.length;
+        imgs[current].classList.add('active');
+      }, 3500);
+    }
+
+    startGallery('gallery-left', dogsLeft);
+    startGallery('gallery-right', catsRight);
   </script>
 </body>
 </html>
