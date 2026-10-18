@@ -525,8 +525,14 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
 
 /* ── AUTH ────────────────────────────────────────────────── */
 .auth-body {
-  display: flex; min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 340px 1fr 280px;
+  min-height: 100dvh;
   background: var(--bg); padding: 0;
+}
+/* Em telas menores sem sidebar/galeria: tudo numa coluna */
+@media (max-width: 860px) {
+  .auth-body { grid-template-columns: 1fr; }
 }
 
 .auth-side {
@@ -558,7 +564,10 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
     rgba(10,15,30,.45) 100%);
 }
 
-.auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; margin-right: 280px; }
+.auth-main {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem 1rem;
+}
 .auth-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--r-lg); box-shadow: var(--sh-lg);
@@ -640,13 +649,12 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
   overflow: hidden;
 }
 
-/* Galeria direita: fixa na borda direita da tela */
+/* Galeria direita: 3ª coluna do grid */
 .pet-gallery--right {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 280px;
-  height: 100vh;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
   overflow: hidden;
   z-index: 0;
 }
@@ -667,9 +675,6 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
 @media (max-width: 860px) {
   .pet-gallery--left,
   .pet-gallery--right { display: none; }
-}
-@media (max-width: 860px) {
-  .auth-main { margin-right: 0; }
 }
 
 /* ── KEYFRAMES ───────────────────────────────────────────── */

@@ -12,10 +12,6 @@
 </head>
 <body class="auth-body">
 
-  <!-- GALERIA DIREITA: gatos (fixed, fora da sidebar) -->
-  <div class="pet-gallery pet-gallery--right" aria-hidden="true">
-    <div class="pet-gallery__track" id="gallery-right"></div>
-  </div>
 
   <aside class="auth-side" aria-hidden="true">
     <!-- GALERIA ESQUERDA: cachorros (dentro da sidebar) -->
@@ -113,6 +109,11 @@
 
     </div>
   </main>
+
+  <!-- GALERIA DIREITA: gatos — 3ª coluna do grid -->
+  <div class="pet-gallery pet-gallery--right" aria-hidden="true">
+    <div class="pet-gallery__track" id="gallery-right"></div>
+  </div>
 
   <script type="module">
     import { auth, db } from './firebase-config.js';
