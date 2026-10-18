@@ -631,16 +631,26 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
 .muted { color: var(--text-2); font-size: .84rem; }
 
 /* ── GALERIA DE PETS (login) ─────────────────────────────── */
-.pet-gallery {
+
+/* Galeria esquerda: absoluta dentro da .auth-side */
+.pet-gallery--left {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Galeria direita: fixa na borda direita da tela */
+.pet-gallery--right {
   position: fixed;
   top: 0;
-  width: 340px;
+  right: 0;
+  width: 280px;
   height: 100vh;
   overflow: hidden;
   z-index: 0;
 }
-.pet-gallery--left  { left: 0; }
-.pet-gallery--right { right: 0; width: 280px; }
+
 .pet-gallery__track { position: relative; width: 100%; height: 100%; }
 .pet-gallery__img {
   position: absolute;
@@ -655,7 +665,8 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
 
 /* Ocultar galerias em telas pequenas */
 @media (max-width: 860px) {
-  .pet-gallery { display: none; }
+  .pet-gallery--left,
+  .pet-gallery--right { display: none; }
 }
 
 /* ── KEYFRAMES ───────────────────────────────────────────── */

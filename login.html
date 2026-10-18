@@ -12,17 +12,16 @@
 </head>
 <body class="auth-body">
 
-  <!-- GALERIA ESQUERDA: cachorros -->
-  <div class="pet-gallery pet-gallery--left" aria-hidden="true">
-    <div class="pet-gallery__track" id="gallery-left"></div>
-  </div>
-
-  <!-- GALERIA DIREITA: gatos -->
+  <!-- GALERIA DIREITA: gatos (fixed, fora da sidebar) -->
   <div class="pet-gallery pet-gallery--right" aria-hidden="true">
     <div class="pet-gallery__track" id="gallery-right"></div>
   </div>
 
   <aside class="auth-side" aria-hidden="true">
+    <!-- GALERIA ESQUERDA: cachorros (dentro da sidebar) -->
+    <div class="pet-gallery pet-gallery--left" aria-hidden="true">
+      <div class="pet-gallery__track" id="gallery-left"></div>
+    </div>
     <div class="auth-side__inner">
       <img src="assets/logo-TCC.png" alt="PetFeeder" style="width:180px;max-width:100%;object-fit:contain;margin-bottom:1rem"/>
       <ul class="auth-side__features">
@@ -32,6 +31,7 @@
         <li><i class="ph ph-chart-line-up"></i> Histórico de consumo</li>
         <li><i class="ph ph-warning-circle"></i> Alertas de nível do reservatório</li>
       </ul>
+    </div>
     </div>
   </aside>
 
@@ -229,19 +229,21 @@
 
   <!-- Galeria de pets -->
   <script>
+    // Cachorros pequenos — IDs fixos do Unsplash
     const dogsLeft = [
-      'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&q=80',
-      'https://images.unsplash.com/photo-1591946614720-90a587da4a36?w=600&q=80',
-      'https://images.unsplash.com/photo-1534361960057-19f4434a7176?w=600&q=80',
-      'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=600&q=80',
-      'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=600&q=80',
+      'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&q=80', // golden filhote
+      'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&q=80',   // dois cachorrinhos
+      'https://images.unsplash.com/photo-1558788353-f76d92427f16?w=600&q=80',   // poodle pequeno
+      'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?w=600&q=80',// cachorro fofo
+      'https://images.unsplash.com/photo-1477884213360-7e9d7dcc1e48?w=600&q=80',// shih-tzu
     ];
+    // Gatos — IDs fixos do Unsplash
     const catsRight = [
-      'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=600&q=80',
-      'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&q=80',
-      'https://images.unsplash.com/photo-1526336024174-e58f5cdd8e13?w=600&q=80',
-      'https://images.unsplash.com/photo-1533743983669-94fa5c4338ec?w=600&q=80',
-      'https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?w=600&q=80',
+      'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&q=80', // gato laranja
+      'https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=600&q=80', // gatinho branco
+      'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=600&q=80', // gato cinza
+      'https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&q=80',    // gato filhote
+      'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=600&q=80', // gato fofo
     ];
 
     function startGallery(id, urls) {
