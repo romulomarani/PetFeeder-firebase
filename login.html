@@ -230,30 +230,31 @@
 
   <!-- Galeria de pets -->
   <script>
-    // Cachorros pequenos — IDs fixos do Unsplash
+    // Cachorros — {url, pos?}
     const dogsLeft = [
-      'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&q=80', // golden filhote
-      'https://images.unsplash.com/photo-1601979031925-424e53b6caaa?w=600&q=80',  // golden retriever centralizado
-      'https://images.unsplash.com/photo-1558788353-f76d92427f16?w=600&q=80',   // poodle pequeno
-      'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?w=600&q=80',// cachorro fofo
-      'https://images.unsplash.com/photo-1477884213360-7e9d7dcc1e48?w=600&q=80',// shih-tzu
+      { url: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&q=80' }, // golden filhote
+      { url: 'https://images.unsplash.com/photo-1601979031925-424e53b6caaa?w=600&q=80' }, // golden retriever
+      { url: 'https://images.unsplash.com/photo-1558788353-f76d92427f16?w=600&q=80' },    // poodle pequeno
+      { url: 'https://images.unsplash.com/photo-1537151625747-768eb6cf92b2?w=600&q=80', pos: 'center 10%' }, // cachorro fofo — cara no topo
+      { url: 'https://images.unsplash.com/photo-1477884213360-7e9d7dcc1e48?w=600&q=80' }, // shih-tzu
     ];
-    // Gatos — IDs fixos do Unsplash
+    // Gatos — {url, pos?}
     const catsRight = [
-      'https://images.unsplash.com/photo-1529778873920-4da4926a72c2?w=600&q=80', // gato laranja centralizado
-      'https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=600&q=80', // gatinho branco
-      'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=600&q=80', // gato cinza centralizado
-      'https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&q=80',    // gato filhote
-      'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=600&q=80', // gato fofo
+      { url: 'https://images.unsplash.com/photo-1529778873920-4da4926a72c2?w=600&q=80' }, // gato laranja
+      { url: 'https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=600&q=80' }, // gatinho branco
+      { url: 'https://images.unsplash.com/photo-1596854407944-bf87f6fdd49e?w=600&q=80' }, // gato cinza
+      { url: 'https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&q=80' },    // gato filhote
+      { url: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=600&q=80' }, // gato fofo
     ];
 
-    function startGallery(id, urls) {
+    function startGallery(id, items) {
       const track = document.getElementById(id);
-      urls.forEach((url, i) => {
+      items.forEach(({ url, pos }, i) => {
         const img = document.createElement('img');
         img.src = url;
         img.className = 'pet-gallery__img' + (i === 0 ? ' active' : '');
         img.alt = '';
+        if (pos) img.style.objectPosition = pos;
         track.appendChild(img);
       });
       let current = 0;
