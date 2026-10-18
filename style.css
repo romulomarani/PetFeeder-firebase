@@ -558,7 +558,7 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
     rgba(10,15,30,.45) 100%);
 }
 
-.auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; }
+.auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; margin-right: 280px; }
 .auth-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--r-lg); box-shadow: var(--sh-lg);
@@ -667,6 +667,9 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
 @media (max-width: 860px) {
   .pet-gallery--left,
   .pet-gallery--right { display: none; }
+}
+@media (max-width: 860px) {
+  .auth-main { margin-right: 0; }
 }
 
 /* ── KEYFRAMES ───────────────────────────────────────────── */
