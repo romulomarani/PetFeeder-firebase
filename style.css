@@ -187,9 +187,9 @@ a  { text-decoration: none; color: inherit; }
 }
 .card + .card { margin-top: .75rem; }
 .card__title {
-  font-size: .78rem; font-weight: 700;
-  color: var(--text-2); margin-bottom: .75rem;
-  letter-spacing: .01em;
+  font-size: .68rem; font-weight: 700;
+  color: var(--text-3); margin-bottom: .75rem;
+  text-transform: uppercase; letter-spacing: .04em;
 }
 
 /* Grid de cards da home */
@@ -231,7 +231,7 @@ a  { text-decoration: none; color: inherit; }
   display: flex; flex-direction: column; justify-content: center;
   flex: 1;
 }
-.live-weight-card__label { font-size: .7rem; font-weight: 600; opacity: .65; margin-bottom: .2rem; }
+.live-weight-card__label { font-size: .68rem; font-weight: 700; opacity: .65; margin-bottom: .2rem; text-transform: uppercase; letter-spacing: .04em; }
 .live-weight-card__val {
   font-family: var(--mono); font-size: 1.7rem;
   font-weight: 700; line-height: 1;
@@ -248,7 +248,7 @@ a  { text-decoration: none; color: inherit; }
   box-shadow: var(--sh);
   flex: 1;
 }
-.reservoir-card__label { font-size: .7rem; font-weight: 600; color: var(--text-2); margin-bottom: .4rem; }
+.reservoir-card__label { font-size: .68rem; font-weight: 700; color: var(--text-3); margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .04em; }
 
 /* Badge do reservatório */
 .reservoir-badge {
