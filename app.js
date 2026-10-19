@@ -510,6 +510,52 @@ function initFeedPage() {
     }
   });
 
+  // ── TARA REMOTA (zerar balança) ────────────────────────────────────────────
+  document.getElementById('btn-tare')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-tare');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner"></i> Zerando...';
+    try {
+      // Limpa resultado anterior e escreve pedido de tara
+      await set(ref(db, `dosador/comandos/tara_resultado`), '');
+      await set(ref(db, `dosador/comandos/tara`), true);
+      // Aguarda o ESP32 gravar o resultado (poll por até 8s)
+      let tentativas = 0;
+      const checar = setInterval(async () => {
+        tentativas++;
+        try {
+          const snap = await get(ref(db, `dosador/comandos/tara_resultado`));
+          const resultado = snap.val();
+          if (resultado === 'ok') {
+            clearInterval(checar);
+            toast('Balança zerada!', 'ok');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ph ph-arrows-counter-clockwise"></i> Zerar';
+          } else if (resultado === 'falha_hx711') {
+            clearInterval(checar);
+            toast('Falha no sensor de peso', 'err');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ph ph-arrows-counter-clockwise"></i> Zerar';
+          } else if (resultado === 'ocupado') {
+            clearInterval(checar);
+            toast('Equipamento ocupado — tente novamente', 'warn');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ph ph-arrows-counter-clockwise"></i> Zerar';
+          } else if (tentativas >= 8) {
+            clearInterval(checar);
+            toast('Sem resposta do dispositivo', 'err');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ph ph-arrows-counter-clockwise"></i> Zerar';
+          }
+        } catch { /* ignora erro de leitura pontual */ }
+      }, 1000);
+    } catch(e) {
+      toast('Erro ao enviar comando', 'err');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ph ph-arrows-counter-clockwise"></i> Zerar';
+    }
+  });
+
   document.querySelectorAll('#sched-days .day-btn').forEach(b => {
     b.addEventListener('click', () => {
       b.classList.toggle('active');

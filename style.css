@@ -265,7 +265,18 @@ a  { text-decoration: none; color: inherit; }
   display: flex; flex-direction: column; justify-content: center;
   flex: 1;
 }
-.live-weight-card__label { font-size: .7rem; font-weight: 600; opacity: .65; margin-bottom: .2rem; text-transform: uppercase; letter-spacing: .04em; }
+.live-weight-card__label { font-size: .7rem; font-weight: 600; opacity: .65; margin-bottom: .2rem; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: .4rem; }
+.btn-tare {
+  display: inline-flex; align-items: center; gap: .25rem;
+  font-size: .65rem; font-weight: 600; font-family: var(--sans);
+  padding: .15rem .45rem; border-radius: 999px;
+  background: transparent; border: 1.5px solid var(--border);
+  color: var(--text-3); cursor: pointer; letter-spacing: .02em;
+  transition: background .15s, color .15s, border-color .15s;
+  text-transform: uppercase;
+}
+.btn-tare:hover:not(:disabled) { background: var(--blue-lt); border-color: var(--blue); color: var(--blue); }
+.btn-tare:disabled { opacity: .45; cursor: not-allowed; }
 .live-weight-card__val {
   font-family: var(--mono); font-size: 1.8rem;
   font-weight: 700; line-height: 1;
