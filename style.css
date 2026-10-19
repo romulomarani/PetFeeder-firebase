@@ -686,12 +686,11 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
   position: fixed;
   top: 0;
   bottom: 0;
-  width: 180px;
   z-index: 0;
   overflow: hidden;
 }
-.pet-gallery--fixed-left  { left: 0; }
-.pet-gallery--fixed-right { right: 0; }
+.pet-gallery--fixed-left  { left: 0; width: 340px; }
+.pet-gallery--fixed-right { right: 0; width: 280px; }
 
 @media (max-width: 1100px) {
   .pet-gallery--fixed-left,
