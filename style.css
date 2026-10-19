@@ -218,7 +218,7 @@ a  { text-decoration: none; color: inherit; }
 
 /* Card de peso ao vivo — destaque */
 .live-weight-card {
-  background: var(--text); color: #fff;
+  background: var(--blue); color: #fff;
   border-radius: var(--r-lg); padding: 1.25rem;
   margin-bottom: .65rem;
   display: flex; align-items: center; justify-content: space-between;
