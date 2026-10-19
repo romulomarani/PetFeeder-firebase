@@ -309,7 +309,7 @@ function refreshHome() {
   const greet = hr < 12 ? 'Bom dia! ☀️' : hr < 18 ? 'Boa tarde! 🌤️' : 'Boa noite! 🌙';
   document.getElementById('dash-greeting').textContent = greet;
   const pet = S.pets[S.petId];
-  document.getElementById('dash-sub').textContent = pet ? `Monitorando: ${pet.nome}` : 'Selecione um pet';
+  document.getElementById('dash-sub').textContent = pet ? 'Monitorando' : 'Selecione um pet';
   updateNextFeed();
   updateLastEvent();
   updateTelemetriaUI();
