@@ -320,9 +320,11 @@ function updateTelemetriaUI() {
     stEl.innerHTML = `<i class="ph ${st.ico}"></i> <span id="equip-status-txt">${t.status_equipamento || 'OCIOSO'}</span>`;
   }
 
-  // Banner de erro
+  // Banner de erro — nunca mostra se dispositivo offline
   const errBanner = document.getElementById('error-banner');
-  if (t.status_equipamento === 'ERRO_VAZIO' || t.status_equipamento === 'ERRO_OBSTRUCAO') {
+  const dispositivoOnline = document.getElementById('status-dot')?.classList.contains('online')
+    || document.getElementById('status-dot-home')?.classList.contains('online');
+  if (dispositivoOnline && (t.status_equipamento === 'ERRO_VAZIO' || t.status_equipamento === 'ERRO_OBSTRUCAO')) {
     document.getElementById('error-title').textContent = t.status_equipamento === 'ERRO_VAZIO'
       ? 'Reservatório vazio' : 'Obstrução mecânica detectada';
     document.getElementById('error-msg').textContent = t.status_equipamento === 'ERRO_VAZIO'
