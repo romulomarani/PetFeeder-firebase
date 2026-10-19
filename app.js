@@ -23,8 +23,6 @@ const S = {
   dateFrom: null,
   dateTo:   null,
   listeners: [],
-  ultimoHeartbeat: 0,
-  hbTimer: null,
 };
 
 /* ── AUTENTICAÇÃO ─────────────────────────────────────────── */
@@ -208,17 +206,14 @@ function startListeners() {
   S.listeners.push(unsubTel);
 
   // Heartbeat (online/offline)
-  // O onValue só dispara quando o valor MUDA. Se a ESP32 desliga, o valor
-  // para de mudar e a tela ficava "online" para sempre. Agora guardamos o
-  // último heartbeat e reavaliamos a idade dele a cada 5 s com um timer.
   const hbRef = ref(db, `dosador/telemetria/ultimo_heartbeat`);
   const unsubHb = onValue(hbRef, snap => {
-    S.ultimoHeartbeat = snap.val() || 0;
-    avaliarOnline();
+    const ts = snap.val();
+    if (!ts) { setStatus('offline'); return; }
+    const diff = Date.now() - ts;
+    setStatus(diff < 65000 ? 'online' : 'offline');
   });
   S.listeners.push(unsubHb);
-  if (S.hbTimer) clearInterval(S.hbTimer);
-  S.hbTimer = setInterval(avaliarOnline, 5000);
 
   // Horários
   const horRef = ref(db, `users/${S.uid}/pets/${S.petId}/horarios`);
@@ -243,15 +238,6 @@ function startListeners() {
     updateDayDashboard();
   });
   S.listeners.push(unsubHist);
-}
-
-// A ESP32 envia telemetria (com heartbeat) a cada ~2 s; sem sinal por 20 s = offline
-const HEARTBEAT_LIMITE_MS = 20000;
-function avaliarOnline() {
-  const ts = S.ultimoHeartbeat;
-  if (!ts) { setStatus('offline'); return; }
-  const diff = Date.now() - (ts * 1000);
-  setStatus(diff < HEARTBEAT_LIMITE_MS ? 'online' : 'offline');
 }
 
 function setStatus(estado) {
@@ -285,12 +271,10 @@ function updateTelemetriaUI() {
   const stEl  = document.getElementById('equip-status-badge');
   const stTxt = document.getElementById('equip-status-txt');
   const stMap = {
-  'OCIOSO':               { cls: 'idle',       ico: 'ph-check-circle' },
-  'DISPENSANDO':          { cls: 'dispensing', ico: 'ph-spinner' },
-  'AGUARDANDO_CONSUMO':   { cls: 'dispensing', ico: 'ph-paw-print' },
-  'ERRO_VAZIO':           { cls: 'error',      ico: 'ph-x-circle' },
-  'ERRO_OBSTRUCAO':       { cls: 'error',      ico: 'ph-x-circle' },
-  'ERRO_BALANCA':         { cls: 'error',      ico: 'ph-x-circle' },
+    'OCIOSO':           { cls: 'idle',       ico: 'ph-check-circle' },
+    'DISPENSANDO':      { cls: 'dispensing', ico: 'ph-spinner' },
+    'ERRO_VAZIO':       { cls: 'error',      ico: 'ph-x-circle' },
+    'ERRO_OBSTRUCAO':   { cls: 'error',      ico: 'ph-x-circle' },
   };
   const st = stMap[t.status_equipamento] || { cls: 'idle', ico: 'ph-check-circle' };
   if (stEl) {
@@ -300,18 +284,12 @@ function updateTelemetriaUI() {
 
   // Banner de erro
   const errBanner = document.getElementById('error-banner');
-  const errosMsg = {
-    'ERRO_VAZIO':     ['Reservatório vazio',
-                       'O silo ficou sem ração durante a dosagem. Reabasteça o reservatório e clique em Resetar.'],
-    'ERRO_OBSTRUCAO': ['Obstrução mecânica detectada',
-                       'O fuso não conseguiu transportar a ração. Verifique se há obstáculos e clique em Resetar.'],
-    'ERRO_BALANCA':   ['Balança sem resposta',
-                       'O módulo HX711 parou de enviar leituras. Verifique fios, alimentação e GND da balança e clique em Resetar.'],
-  };
-  if (errosMsg[t.status_equipamento]) {
-    const [tit, msg] = errosMsg[t.status_equipamento];
-    document.getElementById('error-title').textContent = tit;
-    document.getElementById('error-msg').textContent = msg;
+  if (t.status_equipamento === 'ERRO_VAZIO' || t.status_equipamento === 'ERRO_OBSTRUCAO') {
+    document.getElementById('error-title').textContent = t.status_equipamento === 'ERRO_VAZIO'
+      ? 'Reservatório vazio' : 'Obstrução mecânica detectada';
+    document.getElementById('error-msg').textContent = t.status_equipamento === 'ERRO_VAZIO'
+      ? 'O silo ficou sem ração durante a dosagem. Reabasteça o reservatório e clique em Resetar.'
+      : 'O fuso não conseguiu transportar a ração. Verifique se há obstáculos e clique em Resetar.';
     errBanner.hidden = false;
   } else {
     errBanner.hidden = true;
@@ -331,96 +309,10 @@ function refreshHome() {
   const greet = hr < 12 ? 'Bom dia! ☀️' : hr < 18 ? 'Boa tarde! 🌤️' : 'Boa noite! 🌙';
   document.getElementById('dash-greeting').textContent = greet;
   const pet = S.pets[S.petId];
-  document.getElementById('dash-sub').textContent = pet ? 'Monitorando' : 'Selecione um pet';
+  document.getElementById('dash-sub').textContent = pet ? `Monitorando: ${pet.nome}` : 'Selecione um pet';
   updateNextFeed();
   updateLastEvent();
   updateTelemetriaUI();
-  updateDayDashboard();
-}
-
-/* ── DASHBOARD DO DIA ─────────────────────────────────────── */
-let _dayChart = null;
-
-function updateDayDashboard() {
-  // Filtra só os registros de hoje
-  const hoje = new Date();
-  const ddHoje = `${String(hoje.getDate()).padStart(2,'0')}/${String(hoje.getMonth()+1).padStart(2,'0')}/${hoje.getFullYear()}`;
-  const todayData = S.historico.filter(c => c.dataInicio === ddHoje)
-    .slice().sort((a,b) => (a.horaInicio||'').localeCompare(b.horaInicio||''));
-
-  // Gráfico
-  const chartWrap  = document.getElementById('chart-wrap');
-  const chartEmpty = document.getElementById('chart-empty');
-
-  if (!todayData.length) {
-    chartWrap.style.display  = 'none';
-    chartEmpty.style.display = '';
-    if (_dayChart) { _dayChart.destroy(); _dayChart = null; }
-    return;
-  }
-
-  chartWrap.style.display  = 'block';
-  chartEmpty.style.display = 'none';
-
-  const labels       = todayData.map((c,i) => c.horaInicio || `R${i+1}`);
-  const liberados    = todayData.map(c => parseFloat(c.gramas)||0);
-  const consumidos   = todayData.map(c =>
-    (c.consumido === true || c.consumido === 'true') ? parseFloat(c.gramas)||0 : 0
-  );
-  const naoConsumidos = todayData.map(c =>
-    (c.consumido === true || c.consumido === 'true') ? 0 : parseFloat(c.gramas)||0
-  );
-
-  const ctx = document.getElementById('chart-day').getContext('2d');
-  if (_dayChart) _dayChart.destroy();
-  _dayChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        {
-          label: 'Total liberado',
-          data: liberados,
-          backgroundColor: 'rgba(30,58,138,0.15)',
-          borderColor: '#1e3a8a',
-          borderWidth: 1.5,
-          borderRadius: 6,
-        },
-        {
-          label: 'Consumido',
-          data: consumidos,
-          backgroundColor: 'rgba(22,163,74,0.75)',
-          borderColor: '#16a34a',
-          borderWidth: 1.5,
-          borderRadius: 6,
-        },
-        {
-          label: 'Não consumido',
-          data: naoConsumidos,
-          backgroundColor: 'rgba(220,38,38,0.65)',
-          borderColor: '#dc2626',
-          borderWidth: 1.5,
-          borderRadius: 6,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}g` } },
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-        y: {
-          beginAtZero: true,
-          ticks: { font: { size: 11 }, callback: v => v + 'g' },
-          grid: { color: 'rgba(0,0,0,.06)' },
-        },
-      },
-    },
-  });
 }
 
 function updateNextFeed() {
@@ -447,6 +339,107 @@ function updateLastEvent() {
   if (evEl) {
     evEl.innerHTML = `<strong>${last.dataInicio} às ${last.horaInicio}</strong> — ${last.gramas || '—'}g liberados · ${cons ? '✅ Consumido' : '❌ Não consumido'}`;
   }
+}
+
+/* ── GRÁFICO DIÁRIO ──────────────────────────────────────── */
+let _dayChart = null;
+
+function updateDayDashboard() {
+  const hoje = new Date().toLocaleDateString('pt-BR'); // DD/MM/YYYY
+  const refeicoes = S.historico.filter(c => c.dataInicio === hoje);
+
+  const empty = document.getElementById('chart-empty');
+  const wrap  = document.getElementById('chart-wrap');
+  if (!empty || !wrap) return;
+
+  if (!refeicoes.length) {
+    empty.style.display = '';
+    wrap.style.display  = 'none';
+    if (_dayChart) { _dayChart.destroy(); _dayChart = null; }
+    return;
+  }
+
+  empty.style.display = 'none';
+  wrap.style.display  = '';
+
+  // Monta dados por refeição (ordem cronológica)
+  const sorted = [...refeicoes].sort((a, b) => (a.horaInicio || '').localeCompare(b.horaInicio || ''));
+
+  // Totais do dia
+  const totalLib  = sorted.reduce((s, c) => s + (parseFloat(c.gramas)    || 0), 0);
+  const totalCons = sorted.reduce((s, c) => {
+    const cons = c.consumido === true || c.consumido === 'true' || c.consumido === 'TRUE';
+    return s + (cons ? (parseFloat(c.gramas) || 0) : 0);
+  }, 0);
+
+  // Labels: TOTAL primeiro, depois cada refeição
+  // Um label vazio ('') entre TOTAL e refeições cria espaço visual
+  const labels    = ['TOTAL', '', ...sorted.map(c => c.horaInicio || `R${sorted.indexOf(c)+1}`)];
+  const liberados = [totalLib,  null, ...sorted.map(c => parseFloat(c.gramas)    || 0)];
+  const consumidos = [totalCons, null, ...sorted.map(c => {
+    const cons = c.consumido === true || c.consumido === 'true' || c.consumido === 'TRUE';
+    return cons ? (parseFloat(c.gramas) || 0) : 0;
+  })];
+
+  const canvas = document.getElementById('chart-day');
+  if (!canvas || !window.Chart) return;
+
+  if (_dayChart) { _dayChart.destroy(); _dayChart = null; }
+
+  // Altura dinâmica baseada no nº de grupos (mín 180px)
+  const nGrupos = sorted.length + 2; // +2 = TOTAL + spacer
+  wrap.style.height = Math.max(180, nGrupos * 52) + 'px';
+
+  _dayChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Liberado (g)',
+          data: liberados,
+          backgroundColor: labels.map((l, i) => i === 0 ? '#1e3a8a' : '#3b82f6'),
+          borderRadius: 4,
+          barPercentage: 0.55,
+          categoryPercentage: 0.75,
+        },
+        {
+          label: 'Consumido (g)',
+          data: consumidos,
+          backgroundColor: labels.map((l, i) => i === 0 ? '#15803d' : '#22c55e'),
+          borderRadius: 4,
+          barPercentage: 0.55,
+          categoryPercentage: 0.75,
+        },
+      ],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.parsed.x != null ? `${ctx.dataset.label}: ${ctx.parsed.x.toFixed(1)}g` : '',
+          },
+        },
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { font: { size: 10 }, callback: v => v + 'g' },
+          grid: { color: '#f1f5f9' },
+        },
+        y: {
+          ticks: {
+            font: ctx => ({ size: 11, weight: ctx.tick.label === 'TOTAL' ? '700' : '400' }),
+          },
+          grid: { display: false },
+        },
+      },
+    },
+  });
 }
 
 /* ── ALIMENTAR ───────────────────────────────────────────── */
@@ -515,7 +508,7 @@ function initFeedPage() {
 
     try {
       await push(ref(db, `users/${S.uid}/pets/${S.petId}/horarios`), {
-        hora, gramas, dias: dias.join(','), ativo: true,
+        hora, gramas, dias, ativo: true,
       });
       toast(`Horário ${hora} salvo!`, 'ok');
       document.getElementById('sched-time').value = '';
@@ -537,9 +530,7 @@ function renderHorarios() {
   if (!items.length) { empty.hidden = false; return; }
   empty.hidden = true;
   items.forEach(([key, h]) => {
-    const dias = typeof h.dias === 'string'
-      ? h.dias.split(',').filter(Boolean)
-      : (Array.isArray(h.dias) ? h.dias : Object.values(h.dias || {}));
+    const dias = Array.isArray(h.dias) ? h.dias : [];
     const daysLabel = dias.length === 7 ? 'Todos os dias' : dias.map(d => d.charAt(0).toUpperCase() + d.slice(1)).join(', ');
     const ativo = h.ativo !== false;
     const li = document.createElement('li');
@@ -625,7 +616,7 @@ function renderHistorico() {
       <td><strong>${item.horaInicio || '—'}</strong></td>
       <td><strong>${item.gramas || '—'}g</strong></td>
       <td><span class="badge ${cons ? 'badge--ok' : 'badge--no'}">${cons ? '✔ Sim' : '✘ Não'}</span></td>
-      <td>${item.duracaoMin != null ? item.duracaoMin + ' min' : '—'}</td>
+      <td>${item.duracaoMin ? item.duracaoMin + ' min' : '—'}</td>
       <td><span class="badge ${item.tipo === 'auto' ? 'badge--auto' : 'badge--man'}">${item.tipo === 'auto' ? 'Auto' : 'Manual'}</span></td>`;
     tbody.appendChild(tr);
   });

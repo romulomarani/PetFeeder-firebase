@@ -4,24 +4,15 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PetFeeder — Dashboard</title>
-  <link rel="icon" type="image/png" href="assets/logo-cachorro.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-
-<!-- GALERIAS LATERAIS FIXAS -->
-<div class="pet-gallery pet-gallery--fixed-left" aria-hidden="true">
-  <div class="pet-gallery__track" id="gallery-left"></div>
-</div>
-<div class="pet-gallery pet-gallery--fixed-right" aria-hidden="true">
-  <div class="pet-gallery__track" id="gallery-right"></div>
-</div>
 
 <div id="toast-container" aria-live="polite"></div>
 
@@ -90,7 +81,9 @@
 <!-- TOP NAV -->
 <header class="top-nav">
   <button class="nav-brand" id="nav-logo">
-  <img src="assets/logo-TCC.png" alt="PetFeeder" style="height:36px;width:auto;object-fit:contain"/></button>
+    <span class="nav-brand__icon">🐾</span>
+    <span>PetFeeder</span>
+  </button>
   <nav class="nav-links">
     <button class="nav-btn active" data-page="home"><i class="ph ph-house"></i> Home</button>
     <button class="nav-btn" data-page="feed"><i class="ph ph-bowl-food"></i> Alimentar</button>
@@ -139,16 +132,16 @@
       <button class="error-banner__reset" id="btn-reset-error">Resetar</button>
     </div>
 
-    <!-- Peso ao vivo + Reservatório — dois cards -->
-    <div class="live-pair">
-      <div class="live-weight-card">
-        <div class="live-weight-card__label">Pote de ração</div>
+    <!-- Peso ao vivo -->
+    <div class="live-weight-card">
+      <div>
+        <div class="live-weight-card__label">Peso no pote agora</div>
         <div class="live-weight-card__val">
           <span id="live-weight">—</span><span class="live-weight-card__unit">g</span>
         </div>
       </div>
-      <div class="reservoir-card">
-        <div class="reservoir-card__label">Reservatório</div>
+      <div class="live-weight-card__status">
+        <div class="live-weight-card__status-lbl">Reservatório</div>
         <div class="reservoir-badge unknwn" id="reservoir-badge">
           <i class="ph ph-circle"></i> <span id="reservoir-txt">—</span>
         </div>
@@ -181,11 +174,29 @@
     </div>
 
     <!-- Gráfico do dia -->
-    <div class="card">
+    <div class="card" style="margin-bottom:.75rem">
       <div class="card__title">Refeições do dia</div>
       <div id="chart-empty" class="empty-state" style="padding:1.5rem 0">Nenhuma refeição hoje.</div>
-      <div id="chart-wrap" style="position:relative;height:220px;display:none">
+      <div id="chart-wrap" style="position:relative;display:none">
         <canvas id="chart-day"></canvas>
+      </div>
+    </div>
+
+    <!-- Botão rápido -->
+    <div class="card">
+      <div class="card__title">Alimentar agora</div>
+      <p class="hint" style="margin-bottom:.75rem">Libera ração manualmente para <span id="home-pet-name">seu pet</span>.</p>
+      <div class="form-group">
+        <label for="home-qty" class="form-label">Quantidade (g)</label>
+        <div class="input-row">
+          <input type="number" id="home-qty" class="form-input" value="50" min="5" max="500" placeholder="Ex: 50"/>
+          <span class="input-sfx">g</span>
+        </div>
+      </div>
+      <div class="feed-btn-wrap">
+        <button class="btn btn--feed" id="btn-home-feed">
+          <i class="ph ph-bowl-food"></i> Liberar ração
+        </button>
       </div>
     </div>
   </section>
@@ -363,52 +374,6 @@
   <button class="bot-btn" id="bot-logout"><i class="ph ph-sign-out"></i><span>Sair</span></button>
 </nav>
 
-<!-- Elemento oculto mantido para compatibilidade com app.js -->
-<span id="home-pet-name" hidden>pet</span>
-<!-- Elemento oculto para btn-home-feed -->
-<button id="btn-home-feed" hidden></button>
-<input id="home-qty" hidden value="50"/>
-
 <script type="module" src="app.js"></script>
-
-<!-- Galeria de pets -->
-<script>
-  const dogsLeft = [
-    { url: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=600&q=80', pos: 'center 20%' },
-    { url: 'https://images.unsplash.com/photo-1601979031925-424e53b6caaa?w=600&q=80', pos: 'center 10%' },
-    { url: 'https://images.unsplash.com/photo-1558788353-f76d92427f16?w=600&q=80',    pos: 'center 10%' },
-    { url: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=600&q=80', pos: 'center 20%' },
-    { url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&q=80',    pos: 'center 30%' },
-  ];
-  const catsRight = [
-    { url: 'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=600&q=80', pos: 'center 15%' },
-    { url: 'https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?w=600&q=80',    pos: 'center 20%' },
-    { url: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=600&q=80', pos: 'center 20%' },
-    { url: 'https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&q=80',    pos: 'center 10%' },
-    { url: 'https://images.unsplash.com/photo-1533743983669-94fa5c4338ec?w=600&q=80', pos: 'center 10%' },
-  ];
-
-  function startGallery(id, items) {
-    const track = document.getElementById(id);
-    items.forEach(({ url, pos }, i) => {
-      const img = document.createElement('img');
-      img.src = url;
-      img.className = 'pet-gallery__img' + (i === 0 ? ' active' : '');
-      img.alt = '';
-      if (pos) img.style.objectPosition = pos;
-      track.appendChild(img);
-    });
-    let current = 0;
-    setInterval(() => {
-      const imgs = track.querySelectorAll('.pet-gallery__img');
-      imgs[current].classList.remove('active');
-      current = (current + 1) % imgs.length;
-      imgs[current].classList.add('active');
-    }, 3500);
-  }
-
-  startGallery('gallery-left', dogsLeft);
-  startGallery('gallery-right', catsRight);
-</script>
 </body>
 </html>
