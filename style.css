@@ -749,6 +749,7 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
 }
 .hint { font-size: .74rem; color: var(--text-3); }
 .muted { color: var(--text-2); font-size: .84rem; }
+.muted-val { color: var(--muted); font-size: .8rem; }
 
 /* ── KEYFRAMES ───────────────────────────────────────────── */
 @keyframes fadeUp  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

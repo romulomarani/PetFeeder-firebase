@@ -760,10 +760,14 @@ function renderHistorico() {
   data.forEach(item => {
     const cons = item.consumido === true || item.consumido === 'true';
     const tr   = document.createElement('tr');
+    const ingerida = item.gramas_consumidas != null
+      ? `<strong>${item.gramas_consumidas}g</strong>`
+      : (cons ? '<span class="muted-val">—</span>' : '<span class="muted-val">0g</span>');
     tr.innerHTML = `
       <td>${item.dataInicio || '—'}</td>
       <td><strong>${item.horaInicio || '—'}</strong></td>
       <td><strong>${item.gramas || '—'}g</strong></td>
+      <td>${ingerida}</td>
       <td><span class="badge ${cons ? 'badge--ok' : 'badge--no'}">${cons ? '✔ Sim' : '✘ Não'}</span></td>
       <td>${item.duracaoMin ? item.duracaoMin + ' min' : '—'}</td>
       <td><span class="badge ${item.tipo === 'auto' ? 'badge--auto' : 'badge--man'}">${item.tipo === 'auto' ? 'Programado' : 'Manual'}</span></td>`;
@@ -859,12 +863,13 @@ function exportExcel() {
   if (!window.XLSX) { toast('Biblioteca não carregada', 'err'); return; }
   const pet = S.pets[S.petId];
   const rows = data.map(c => ({
-    'Data':              c.dataInicio  || '',
-    'Horário':           c.horaInicio  || '',
-    'Qtd liberada (g)':  c.gramas      || 0,
-    'Consumido':         (c.consumido === true || c.consumido === 'true') ? 'Sim' : 'Não',
-    'Tempo de consumo (min)': c.duracaoMin || 0,
-    'Tipo':              c.tipo === 'auto' ? 'Programado' : 'Manual',
+    'Data':                  c.dataInicio  || '',
+    'Horário':               c.horaInicio  || '',
+    'Qtd liberada (g)':      c.gramas      || 0,
+    'Qtd ingerida (g)':      c.gramas_consumidas != null ? c.gramas_consumidas : '',
+    'Consumido':             (c.consumido === true || c.consumido === 'true') ? 'Sim' : 'Não',
+    'Tempo de consumo (min)':c.duracaoMin || 0,
+    'Tipo':                  c.tipo === 'auto' ? 'Programado' : 'Manual',
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
@@ -897,8 +902,8 @@ function exportPDF() {
 
   doc.setFont('helvetica','bold'); doc.setFontSize(10);
   doc.text('Histórico:', 14, 82);
-  const cols = ['Data','Horário','Qtd lib.','Consumido','T. consumo','Tipo'];
-  const colW = [28,20,18,26,22,24];
+  const cols = ['Data','Horário','Qtd lib.','Qtd ingerid.','Consumido','T. consumo','Tipo'];
+  const colW = [26,18,16,18,22,20,22];
   let y = 90;
   doc.setFillColor(248,250,252); doc.rect(14, y-4, 182, 8, 'F');
   doc.setFontSize(7); doc.setTextColor(100,116,139);
@@ -908,7 +913,8 @@ function exportPDF() {
     y += 7; if (y > 270) { doc.addPage(); y = 20; }
     if (idx%2===1) { doc.setFillColor(248,250,252); doc.rect(14,y-4,182,7,'F'); }
     const ok  = item.consumido === true || item.consumido === 'true';
-    const row = [item.dataInicio||'',item.horaInicio||'',`${item.gramas||0}g`,ok?'Sim':'Não',item.duracaoMin?`${item.duracaoMin}min`:'—',item.tipo==='auto'?'Programado':'Manual'];
+    const ing = item.gramas_consumidas != null ? `${item.gramas_consumidas}g` : '—';
+    const row = [item.dataInicio||'',item.horaInicio||'',`${item.gramas||0}g`,ing,ok?'Sim':'Não',item.duracaoMin?`${item.duracaoMin}min`:'—',item.tipo==='auto'?'Programado':'Manual'];
     x = 14; row.forEach((v,i) => { doc.text(String(v),x+1,y); x+=colW[i]; });
   });
   for (let p=1; p<=doc.getNumberOfPages(); p++) {
