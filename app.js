@@ -484,10 +484,19 @@ function initFeedPage() {
     doFeed(qty);
   });
   document.getElementById('btn-reset-error')?.addEventListener('click', async () => {
-    await set(ref(db, `dosador/telemetria/status_equipamento`), 'OCIOSO');
+    // Esconde o banner imediatamente na UI
+    const banner = document.getElementById('error-banner');
+    if (banner) banner.hidden = true;
     S.telemetria.status_equipamento = 'OCIOSO';
     updateTelemetriaUI();
-    toast('Status resetado', 'ok');
+    // Grava no Firebase
+    try {
+      await set(ref(db, `dosador/telemetria/status_equipamento`), 'OCIOSO');
+      toast('Status resetado', 'ok');
+    } catch(e) {
+      toast('Erro ao gravar no Firebase', 'err');
+      if (banner) banner.hidden = false;
+    }
   });
 
   document.querySelectorAll('#sched-days .day-btn').forEach(b => {
