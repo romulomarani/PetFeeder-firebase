@@ -61,6 +61,8 @@ a  { text-decoration: none; color: inherit; }
   max-width: var(--max-w);
   margin: 0 auto;
   padding: 1.25rem .875rem 2rem;
+  position: relative;
+  z-index: 1;
 }
 @media (min-width: 768px) { .app-main { padding: 1.75rem 1.25rem 2.5rem; } }
 
@@ -676,6 +678,24 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
 @media (max-width: 860px) {
   .pet-gallery--left,
   .pet-gallery--right { display: none; }
+}
+
+/* Galerias fixas do dashboard */
+.pet-gallery--fixed-left,
+.pet-gallery--fixed-right {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 180px;
+  z-index: 0;
+  overflow: hidden;
+}
+.pet-gallery--fixed-left  { left: 0; }
+.pet-gallery--fixed-right { right: 0; }
+
+@media (max-width: 1100px) {
+  .pet-gallery--fixed-left,
+  .pet-gallery--fixed-right { display: none; }
 }
 
 /* ── KEYFRAMES ───────────────────────────────────────────── */
