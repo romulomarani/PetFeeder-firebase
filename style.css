@@ -216,22 +216,37 @@ a  { text-decoration: none; color: inherit; }
 .stat-card__value.mono { font-family: var(--mono); font-size: 1.1rem; }
 .stat-card__sub { font-size: .72rem; color: var(--text-3); margin-top: 2px; }
 
-/* Card de peso ao vivo — destaque */
+/* Par de cards: peso + reservatório */
+.live-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .65rem;
+  margin-bottom: .65rem;
+}
+
+/* Card de peso ao vivo */
 .live-weight-card {
   background: var(--blue); color: #fff;
   border-radius: var(--r-lg); padding: 1.25rem;
-  margin-bottom: .65rem;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; flex-direction: column; justify-content: center;
 }
 .live-weight-card__label { font-size: .75rem; font-weight: 600; opacity: .65; margin-bottom: .25rem; }
 .live-weight-card__val {
-  font-family: var(--mono); font-size: 2.2rem;
+  font-family: var(--mono); font-size: 2rem;
   font-weight: 700; line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-.live-weight-card__unit { font-size: .9rem; opacity: .5; margin-left: 3px; }
-.live-weight-card__status { text-align: right; }
-.live-weight-card__status-lbl { font-size: .7rem; opacity: .55; margin-bottom: .3rem; }
+.live-weight-card__unit { font-size: .85rem; opacity: .5; margin-left: 3px; }
+
+/* Card do reservatório */
+.reservoir-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 1.25rem;
+  display: flex; flex-direction: column; justify-content: center;
+  box-shadow: var(--sh);
+}
+.reservoir-card__label { font-size: .75rem; font-weight: 600; color: var(--text-2); margin-bottom: .5rem; }
 
 /* Badge do reservatório */
 .reservoir-badge {
