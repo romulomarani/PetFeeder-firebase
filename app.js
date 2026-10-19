@@ -485,6 +485,8 @@ function initFeedPage() {
   });
   document.getElementById('btn-reset-error')?.addEventListener('click', async () => {
     await set(ref(db, `dosador/telemetria/status_equipamento`), 'OCIOSO');
+    S.telemetria.status_equipamento = 'OCIOSO';
+    updateTelemetriaUI();
     toast('Status resetado', 'ok');
   });
 
