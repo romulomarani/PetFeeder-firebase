@@ -367,8 +367,22 @@
     <div class="export-row">
       <button class="btn--excel" id="btn-excel"><i class="ph ph-table"></i> Excel</button>
       <button class="btn--pdf"   id="btn-pdf"><i class="ph ph-file-pdf"></i> PDF</button>
+      <button class="btn--clear-hist" id="btn-clear-hist"><i class="ph ph-trash"></i> Limpar</button>
     </div>
   </section>
+
+  <!-- MODAL CONFIRMAÇÃO: limpar histórico -->
+  <div class="modal-overlay" id="modal-clear-hist" hidden>
+    <div class="modal-box">
+      <div class="modal-box__icon"><i class="ph ph-warning"></i></div>
+      <h2 class="modal-box__title">Limpar histórico?</h2>
+      <p class="modal-box__body">Todos os registros de alimentação serão apagados permanentemente. Esta ação não pode ser desfeita.</p>
+      <div class="modal-box__actions">
+        <button class="btn btn--ghost" id="btn-clear-cancel">Cancelar</button>
+        <button class="btn btn--danger" id="btn-clear-confirm"><i class="ph ph-trash"></i> Apagar tudo</button>
+      </div>
+    </div>
+  </div>
 
 </main>
 

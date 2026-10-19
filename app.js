@@ -815,6 +815,38 @@ function initHistoryPage() {
 
   document.getElementById('btn-excel')?.addEventListener('click', exportExcel);
   document.getElementById('btn-pdf')?.addEventListener('click', exportPDF);
+
+  // Limpar histórico
+  document.getElementById('btn-clear-hist')?.addEventListener('click', () => {
+    const modal = document.getElementById('modal-clear-hist');
+    if (modal) modal.hidden = false;
+  });
+  document.getElementById('btn-clear-cancel')?.addEventListener('click', () => {
+    const modal = document.getElementById('modal-clear-hist');
+    if (modal) modal.hidden = true;
+  });
+  document.getElementById('modal-clear-hist')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget) e.currentTarget.hidden = true;
+  });
+  document.getElementById('btn-clear-confirm')?.addEventListener('click', async () => {
+    const modal = document.getElementById('modal-clear-hist');
+    const btn = document.getElementById('btn-clear-confirm');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner"></i> Apagando...';
+    try {
+      await remove(ref(db, `users/${S.uid}/pets/${S.petId}/historico`));
+      S.historico = [];
+      renderHistorico();
+      atualizarTimerTrava();
+      if (modal) modal.hidden = true;
+      toast('Histórico apagado', 'ok');
+    } catch(e) {
+      toast('Erro ao apagar histórico', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ph ph-trash"></i> Apagar tudo';
+    }
+  });
 }
 
 /* ── EXPORTAÇÃO ──────────────────────────────────────────── */
