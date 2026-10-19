@@ -123,11 +123,17 @@
         <h1 id="dash-greeting">Olá! 👋</h1>
         <p class="page-sub" id="dash-sub">Acompanhe a alimentação do seu pet</p>
       </div>
-      <button class="pet-chip" id="dash-pet-btn" style="flex-shrink:0">
-        <span id="dash-pet-av">🐾</span>
-        <span id="dash-pet-name">Selecionar</span>
-        <i class="ph ph-swap"></i>
-      </button>
+      <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
+        <div class="status-badge" id="status-badge-home">
+          <span class="status-dot connecting" id="status-dot-home"></span>
+          <span id="status-label-home">Conectando...</span>
+        </div>
+        <button class="pet-chip" id="dash-pet-btn">
+          <span id="dash-pet-av">🐾</span>
+          <span id="dash-pet-name">Selecionar</span>
+          <i class="ph ph-swap"></i>
+        </button>
+      </div>
     </div>
 
     <!-- Banner de erro -->

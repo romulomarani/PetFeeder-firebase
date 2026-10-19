@@ -72,6 +72,11 @@ function goTo(pageId) {
   document.querySelectorAll('.nav-btn, .bot-btn[data-page]').forEach(b => {
     b.classList.toggle('active', b.dataset.page === pageId);
   });
+  // Badge de status: na Home fica ao lado do pet; nas outras páginas fica no nav
+  const navBadge  = document.getElementById('status-badge');
+  const homeBadge = document.getElementById('status-badge-home');
+  if (navBadge)  navBadge.hidden  = (pageId === 'home');
+  if (homeBadge) homeBadge.hidden = (pageId !== 'home');
   if (pageId === 'home')    refreshHome();
   if (pageId === 'feed')    loadHorarios();
   if (pageId === 'history') loadHistorico();
@@ -241,11 +246,17 @@ function startListeners() {
 }
 
 function setStatus(estado) {
+  const txt = estado === 'online' ? 'Dispositivo online' : estado === 'offline' ? 'Dispositivo offline' : 'Conectando...';
+  // Badge do nav (outras páginas)
   const dot = document.getElementById('status-dot');
   const lbl = document.getElementById('status-label');
-  if (!dot || !lbl) return;
-  dot.className = `status-dot ${estado}`;
-  lbl.textContent = estado === 'online' ? 'Dispositivo online' : estado === 'offline' ? 'Dispositivo offline' : 'Conectando...';
+  if (dot) dot.className = `status-dot ${estado}`;
+  if (lbl) lbl.textContent = txt;
+  // Badge da Home (ao lado do pet)
+  const dotH = document.getElementById('status-dot-home');
+  const lblH = document.getElementById('status-label-home');
+  if (dotH) dotH.className = `status-dot ${estado}`;
+  if (lblH) lblH.textContent = txt;
 }
 
 function updateTelemetriaUI() {
