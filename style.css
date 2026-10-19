@@ -452,6 +452,38 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
 .kpi-card__val { font-size: 1.4rem; font-weight: 800; color: var(--blue); font-family: var(--mono); }
 .kpi-card__lbl { font-size: .64rem; color: var(--text-3); font-weight: 600; margin-top: 2px; text-transform: uppercase; letter-spacing: .04em; }
 
+/* ── DASHBOARD DO DIA (home) ─────────────────────────────── */
+.day-dashboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .65rem;
+  margin-bottom: .65rem;
+}
+.day-stat-card {
+  background: #1e3a8a; color: #fff;
+  border-radius: var(--r-lg); padding: .9rem 1.1rem;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.day-stat-card--alt {
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); box-shadow: var(--sh);
+}
+.day-stat-card__label {
+  font-size: .68rem; font-weight: 700; opacity: .65;
+  text-transform: uppercase; letter-spacing: .04em; margin-bottom: .2rem;
+}
+.day-stat-card--alt .day-stat-card__label { opacity: 1; color: var(--text-3); }
+.day-stat-card__val {
+  font-family: var(--mono); font-size: 1.7rem;
+  font-weight: 700; line-height: 1;
+}
+.day-stat-card--alt .day-stat-card__val { color: var(--blue); }
+.day-stat-card__unit { font-size: .8rem; opacity: .5; margin-left: 3px; }
+.day-stat-card--alt .day-stat-card__unit { opacity: .6; }
+.day-stat-card__sub {
+  font-size: .72rem; opacity: .6; margin-top: .3rem;
+}
+
 .filter-row { display: flex; gap: .35rem; flex-wrap: wrap; margin-bottom: .6rem; }
 .filter-btn {
   padding: 5px 12px; border: 1.5px solid var(--border);

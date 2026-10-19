@@ -240,6 +240,7 @@ function startListeners() {
     renderHistorico();
     updateLastEvent();
     renderKPIs();
+    updateDayDashboard();
   });
   S.listeners.push(unsubHist);
 }
@@ -334,6 +335,93 @@ function refreshHome() {
   updateNextFeed();
   updateLastEvent();
   updateTelemetriaUI();
+  updateDayDashboard();
+}
+
+/* ── DASHBOARD DO DIA ─────────────────────────────────────── */
+let _dayChart = null;
+
+function updateDayDashboard() {
+  // Filtra só os registros de hoje
+  const hoje = new Date();
+  const ddHoje = `${String(hoje.getDate()).padStart(2,'0')}/${String(hoje.getMonth()+1).padStart(2,'0')}/${hoje.getFullYear()}`;
+  const todayData = S.historico.filter(c => c.dataInicio === ddHoje)
+    .slice().sort((a,b) => (a.horaInicio||'').localeCompare(b.horaInicio||''));
+
+  // Cards de totais
+  const totalLiberado  = todayData.reduce((s,c) => s + (parseFloat(c.gramas)||0), 0);
+  const totalConsumido = todayData
+    .filter(c => c.consumido === true || c.consumido === 'true')
+    .reduce((s,c) => s + (parseFloat(c.gramas)||0), 0);
+  const rej = totalLiberado ? Math.round(((totalLiberado - totalConsumido) / totalLiberado) * 100) : 0;
+
+  document.getElementById('day-consumed').textContent = Math.round(totalConsumido);
+  document.getElementById('day-released').textContent = Math.round(totalLiberado);
+  document.getElementById('day-meals').textContent    = `${todayData.length} refeição${todayData.length !== 1 ? 'ões' : ''}`;
+  document.getElementById('day-rejection').textContent= `${rej}% rejeitado`;
+
+  // Gráfico
+  const chartWrap  = document.getElementById('chart-wrap');
+  const chartEmpty = document.getElementById('chart-empty');
+
+  if (!todayData.length) {
+    chartWrap.style.display  = 'none';
+    chartEmpty.style.display = '';
+    if (_dayChart) { _dayChart.destroy(); _dayChart = null; }
+    return;
+  }
+
+  chartWrap.style.display  = 'block';
+  chartEmpty.style.display = 'none';
+
+  const labels    = todayData.map((c,i) => c.horaInicio || `R${i+1}`);
+  const liberados = todayData.map(c => parseFloat(c.gramas)||0);
+  const consumidos = todayData.map(c =>
+    (c.consumido === true || c.consumido === 'true') ? parseFloat(c.gramas)||0 : 0
+  );
+
+  const ctx = document.getElementById('chart-day').getContext('2d');
+  if (_dayChart) _dayChart.destroy();
+  _dayChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Liberado (g)',
+          data: liberados,
+          backgroundColor: 'rgba(30,58,138,0.18)',
+          borderColor: '#1e3a8a',
+          borderWidth: 1.5,
+          borderRadius: 6,
+        },
+        {
+          label: 'Consumido (g)',
+          data: consumidos,
+          backgroundColor: 'rgba(22,163,74,0.75)',
+          borderColor: '#16a34a',
+          borderWidth: 1.5,
+          borderRadius: 6,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}g` } },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: {
+          beginAtZero: true,
+          ticks: { font: { size: 11 }, callback: v => v + 'g' },
+          grid: { color: 'rgba(0,0,0,.06)' },
+        },
+      },
+    },
+  });
 }
 
 function updateNextFeed() {

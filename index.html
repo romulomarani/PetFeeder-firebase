@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/src/index.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link rel="stylesheet" href="style.css"/>
 </head>
@@ -179,21 +180,28 @@
       <div class="last-event" id="last-event">Nenhum evento registrado ainda.</div>
     </div>
 
-    <!-- Botão rápido -->
-    <div class="card">
-      <div class="card__title">Alimentar agora</div>
-      <p class="hint" style="margin-bottom:.75rem">Libera ração manualmente para <span id="home-pet-name">seu pet</span>.</p>
-      <div class="form-group">
-        <label for="home-qty" class="form-label">Quantidade (g)</label>
-        <div class="input-row">
-          <input type="number" id="home-qty" class="form-input" value="50" min="5" max="500" placeholder="Ex: 50"/>
-          <span class="input-sfx">g</span>
-        </div>
+    <!-- Dashboard do dia -->
+    <div class="day-dashboard">
+      <!-- Card consumo hoje -->
+      <div class="day-stat-card">
+        <div class="day-stat-card__label">Consumo hoje</div>
+        <div class="day-stat-card__val"><span id="day-consumed">—</span><span class="day-stat-card__unit">g</span></div>
+        <div class="day-stat-card__sub" id="day-meals">— refeições</div>
       </div>
-      <div class="feed-btn-wrap">
-        <button class="btn btn--feed" id="btn-home-feed">
-          <i class="ph ph-bowl-food"></i> Liberar ração
-        </button>
+      <!-- Card liberado hoje -->
+      <div class="day-stat-card day-stat-card--alt">
+        <div class="day-stat-card__label">Liberado hoje</div>
+        <div class="day-stat-card__val"><span id="day-released">—</span><span class="day-stat-card__unit">g</span></div>
+        <div class="day-stat-card__sub" id="day-rejection">— % rejeitado</div>
+      </div>
+    </div>
+
+    <!-- Gráfico do dia -->
+    <div class="card">
+      <div class="card__title">Refeições do dia — liberado vs consumido</div>
+      <div id="chart-empty" class="empty-state" style="padding:1.5rem 0">Nenhuma refeição hoje.</div>
+      <div id="chart-wrap" style="position:relative;height:200px;display:none">
+        <canvas id="chart-day"></canvas>
       </div>
     </div>
   </section>
@@ -370,6 +378,12 @@
   <button class="bot-btn" data-page="history"><i class="ph ph-list-bullets"></i><span>Histórico</span></button>
   <button class="bot-btn" id="bot-logout"><i class="ph ph-sign-out"></i><span>Sair</span></button>
 </nav>
+
+<!-- Elemento oculto mantido para compatibilidade com app.js -->
+<span id="home-pet-name" hidden>pet</span>
+<!-- Elemento oculto para btn-home-feed -->
+<button id="btn-home-feed" hidden></button>
+<input id="home-qty" hidden value="50"/>
 
 <script type="module" src="app.js"></script>
 
