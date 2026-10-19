@@ -236,6 +236,16 @@ function startListeners() {
   });
   S.listeners.push(unsubOffset);
 
+  // Configuração do dispositivo (trava_feed_seg sincronizado do firmware)
+  const travaRef = ref(db, 'dosador/config/trava_feed_seg');
+  const unsubTrava = onValue(travaRef, snap => {
+    const val = snap.val();
+    if (val && typeof val === 'number' && val > 0) {
+      TRAVA_SEG = val;
+    }
+  });
+  S.listeners.push(unsubTrava);
+
   // Horários
   const horRef = ref(db, `users/${S.uid}/pets/${S.petId}/horarios`);
   const unsubHor = onValue(horRef, snap => {
@@ -257,6 +267,7 @@ function startListeners() {
     updateLastEvent();
     renderKPIs();
     updateDayDashboard();
+    atualizarTimerTrava(); // inicia contagem se último ciclo foi há < 60s
   });
   S.listeners.push(unsubHist);
 }
@@ -328,6 +339,54 @@ function updateTelemetriaUI() {
     const b = document.getElementById(id);
     if (b) { b.disabled = !ocioso; b.title = ocioso ? '' : 'Aguarde o dispositivo ficar ocioso'; }
   });
+  // Atualiza o timer de trava ao mudar status
+  if (ocioso) atualizarTimerTrava();
+}
+
+/* ── TIMER DE TRAVA (60s após último ciclo) ──────────────────── */
+let TRAVA_SEG = 60; // valor padrão; atualizado automaticamente via Firebase
+let _timerTravaInterval = null;
+
+function atualizarTimerTrava() {
+  // Para qualquer timer anterior
+  if (_timerTravaInterval) { clearInterval(_timerTravaInterval); _timerTravaInterval = null; }
+
+  const ultimo = S.historico[0];
+  if (!ultimo?.timestamp) return; // sem histórico, sem trava
+
+  function tick() {
+    const agoraServidor = Date.now() + (S._serverOffset || 0);
+    // ultimo.timestamp pode estar em segundos (Unix) ou ms — normaliza
+    const tsMs = ultimo.timestamp > 1e12 ? ultimo.timestamp : ultimo.timestamp * 1000;
+    const decorridoSeg = Math.floor((agoraServidor - tsMs) / 1000);
+    const restante = TRAVA_SEG - decorridoSeg;
+
+    const travado = restante > 0;
+    const labelBase = '<i class="ph ph-bowl-food"></i> Alimentar';
+
+    ['btn-home-feed', 'btn-feed'].forEach(id => {
+      const b = document.getElementById(id);
+      if (!b) return;
+      // Só aplica trava se o dispositivo estiver OCIOSO (não sobrepõe erro/dispensando)
+      const statusOcioso = !S.telemetria.status_equipamento || S.telemetria.status_equipamento === 'OCIOSO';
+      if (!statusOcioso) return;
+      if (travado) {
+        b.disabled = true;
+        b.innerHTML = `<i class="ph ph-timer"></i> Aguarde ${restante}s`;
+      } else {
+        b.disabled = false;
+        b.innerHTML = labelBase;
+      }
+    });
+
+    if (!travado) {
+      clearInterval(_timerTravaInterval);
+      _timerTravaInterval = null;
+    }
+  }
+
+  tick(); // roda imediatamente
+  _timerTravaInterval = setInterval(tick, 1000);
 }
 
 /* ── HOME ─────────────────────────────────────────────────── */
