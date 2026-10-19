@@ -180,27 +180,11 @@
       <div class="last-event" id="last-event">Nenhum evento registrado ainda.</div>
     </div>
 
-    <!-- Dashboard do dia -->
-    <div class="day-dashboard">
-      <!-- Card consumo hoje -->
-      <div class="day-stat-card">
-        <div class="day-stat-card__label">Consumo hoje</div>
-        <div class="day-stat-card__val"><span id="day-consumed">—</span><span class="day-stat-card__unit">g</span></div>
-        <div class="day-stat-card__sub" id="day-meals">— refeições</div>
-      </div>
-      <!-- Card liberado hoje -->
-      <div class="day-stat-card day-stat-card--alt">
-        <div class="day-stat-card__label">Liberado hoje</div>
-        <div class="day-stat-card__val"><span id="day-released">—</span><span class="day-stat-card__unit">g</span></div>
-        <div class="day-stat-card__sub" id="day-rejection">— % rejeitado</div>
-      </div>
-    </div>
-
     <!-- Gráfico do dia -->
     <div class="card">
-      <div class="card__title">Refeições do dia — liberado vs consumido</div>
+      <div class="card__title">Refeições do dia</div>
       <div id="chart-empty" class="empty-state" style="padding:1.5rem 0">Nenhuma refeição hoje.</div>
-      <div id="chart-wrap" style="position:relative;height:200px;display:none">
+      <div id="chart-wrap" style="position:relative;height:220px;display:none">
         <canvas id="chart-day"></canvas>
       </div>
     </div>

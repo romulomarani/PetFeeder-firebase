@@ -348,18 +348,6 @@ function updateDayDashboard() {
   const todayData = S.historico.filter(c => c.dataInicio === ddHoje)
     .slice().sort((a,b) => (a.horaInicio||'').localeCompare(b.horaInicio||''));
 
-  // Cards de totais
-  const totalLiberado  = todayData.reduce((s,c) => s + (parseFloat(c.gramas)||0), 0);
-  const totalConsumido = todayData
-    .filter(c => c.consumido === true || c.consumido === 'true')
-    .reduce((s,c) => s + (parseFloat(c.gramas)||0), 0);
-  const rej = totalLiberado ? Math.round(((totalLiberado - totalConsumido) / totalLiberado) * 100) : 0;
-
-  document.getElementById('day-consumed').textContent = Math.round(totalConsumido);
-  document.getElementById('day-released').textContent = Math.round(totalLiberado);
-  document.getElementById('day-meals').textContent    = `${todayData.length} refeição${todayData.length !== 1 ? 'ões' : ''}`;
-  document.getElementById('day-rejection').textContent= `${rej}% rejeitado`;
-
   // Gráfico
   const chartWrap  = document.getElementById('chart-wrap');
   const chartEmpty = document.getElementById('chart-empty');
@@ -374,10 +362,13 @@ function updateDayDashboard() {
   chartWrap.style.display  = 'block';
   chartEmpty.style.display = 'none';
 
-  const labels    = todayData.map((c,i) => c.horaInicio || `R${i+1}`);
-  const liberados = todayData.map(c => parseFloat(c.gramas)||0);
-  const consumidos = todayData.map(c =>
+  const labels       = todayData.map((c,i) => c.horaInicio || `R${i+1}`);
+  const liberados    = todayData.map(c => parseFloat(c.gramas)||0);
+  const consumidos   = todayData.map(c =>
     (c.consumido === true || c.consumido === 'true') ? parseFloat(c.gramas)||0 : 0
+  );
+  const naoConsumidos = todayData.map(c =>
+    (c.consumido === true || c.consumido === 'true') ? 0 : parseFloat(c.gramas)||0
   );
 
   const ctx = document.getElementById('chart-day').getContext('2d');
@@ -388,18 +379,26 @@ function updateDayDashboard() {
       labels,
       datasets: [
         {
-          label: 'Liberado (g)',
+          label: 'Total liberado',
           data: liberados,
-          backgroundColor: 'rgba(30,58,138,0.18)',
+          backgroundColor: 'rgba(30,58,138,0.15)',
           borderColor: '#1e3a8a',
           borderWidth: 1.5,
           borderRadius: 6,
         },
         {
-          label: 'Consumido (g)',
+          label: 'Consumido',
           data: consumidos,
           backgroundColor: 'rgba(22,163,74,0.75)',
           borderColor: '#16a34a',
+          borderWidth: 1.5,
+          borderRadius: 6,
+        },
+        {
+          label: 'Não consumido',
+          data: naoConsumidos,
+          backgroundColor: 'rgba(220,38,38,0.65)',
+          borderColor: '#dc2626',
           borderWidth: 1.5,
           borderRadius: 6,
         },
