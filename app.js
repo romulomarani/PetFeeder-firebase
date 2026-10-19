@@ -766,7 +766,7 @@ function renderHistorico() {
       <td><strong>${item.gramas || '—'}g</strong></td>
       <td><span class="badge ${cons ? 'badge--ok' : 'badge--no'}">${cons ? '✔ Sim' : '✘ Não'}</span></td>
       <td>${item.duracaoMin ? item.duracaoMin + ' min' : '—'}</td>
-      <td><span class="badge ${item.tipo === 'auto' ? 'badge--auto' : 'badge--man'}">${item.tipo === 'auto' ? 'Auto' : 'Manual'}</span></td>`;
+      <td><span class="badge ${item.tipo === 'auto' ? 'badge--auto' : 'badge--man'}">${item.tipo === 'auto' ? 'Auto / Programado' : 'Manual'}</span></td>`;
     tbody.appendChild(tr);
   });
 }
@@ -777,7 +777,10 @@ function renderKPIs() {
   const totalG    = data.reduce((s, c) => s + (parseFloat(c.gramas) || 0), 0);
   const rej       = data.length ? Math.round(((data.length - consumidos.length) / data.length) * 100) : 0;
   const tempos    = consumidos.map(c => parseFloat(c.duracaoMin)).filter(Boolean);
-  const avgTempo  = tempos.length ? (tempos.reduce((a,b) => a+b,0)/tempos.length).toFixed(1) : '—';
+  const avgMinRaw = tempos.length ? tempos.reduce((a,b) => a+b,0)/tempos.length : null;
+  const avgTempo  = avgMinRaw != null
+    ? (() => { const m = Math.floor(avgMinRaw); const s = Math.round((avgMinRaw - m) * 60); return s > 0 ? `${m}min ${s}s` : `${m}min`; })()
+    : '—';
   const avgDaily  = data.length ? Math.round(totalG / 7) : 0;
 
   document.getElementById('kpi-total').textContent    = data.length;
@@ -856,12 +859,12 @@ function exportExcel() {
   if (!window.XLSX) { toast('Biblioteca não carregada', 'err'); return; }
   const pet = S.pets[S.petId];
   const rows = data.map(c => ({
-    'Data':        c.dataInicio  || '',
-    'Hora Início': c.horaInicio  || '',
-    'Gramas':      c.gramas      || 0,
-    'Consumido':   (c.consumido === true || c.consumido === 'true') ? 'Sim' : 'Não',
-    'Duração(min)':c.duracaoMin  || 0,
-    'Tipo':        c.tipo === 'auto' ? 'Automático' : 'Manual',
+    'Data':              c.dataInicio  || '',
+    'Horário':           c.horaInicio  || '',
+    'Qtd liberada (g)':  c.gramas      || 0,
+    'Consumido':         (c.consumido === true || c.consumido === 'true') ? 'Sim' : 'Não',
+    'Tempo de consumo (min)': c.duracaoMin || 0,
+    'Tipo':              c.tipo === 'auto' ? 'Auto / Programado' : 'Manual',
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
@@ -894,7 +897,7 @@ function exportPDF() {
 
   doc.setFont('helvetica','bold'); doc.setFontSize(10);
   doc.text('Histórico:', 14, 82);
-  const cols = ['Data','Início','Qtd.','Consumido','Duração','Tipo'];
+  const cols = ['Data','Horário','Qtd lib.','Consumido','T. consumo','Tipo'];
   const colW = [28,20,18,26,22,24];
   let y = 90;
   doc.setFillColor(248,250,252); doc.rect(14, y-4, 182, 8, 'F');
@@ -905,7 +908,7 @@ function exportPDF() {
     y += 7; if (y > 270) { doc.addPage(); y = 20; }
     if (idx%2===1) { doc.setFillColor(248,250,252); doc.rect(14,y-4,182,7,'F'); }
     const ok  = item.consumido === true || item.consumido === 'true';
-    const row = [item.dataInicio||'',item.horaInicio||'',`${item.gramas||0}g`,ok?'Sim':'Não',item.duracaoMin?`${item.duracaoMin}min`:'—',item.tipo==='auto'?'Auto':'Manual'];
+    const row = [item.dataInicio||'',item.horaInicio||'',`${item.gramas||0}g`,ok?'Sim':'Não',item.duracaoMin?`${item.duracaoMin}min`:'—',item.tipo==='auto'?'Auto / Prog.':'Manual'];
     x = 14; row.forEach((v,i) => { doc.text(String(v),x+1,y); x+=colW[i]; });
   });
   for (let p=1; p<=doc.getNumberOfPages(); p++) {
