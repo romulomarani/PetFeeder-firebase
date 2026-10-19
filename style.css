@@ -263,7 +263,7 @@ a  { text-decoration: none; color: inherit; }
   background: #1e3a8a; color: #fff;
   border-radius: var(--r-lg); padding: .85rem 1.1rem;
   display: flex; flex-direction: column; justify-content: center;
-  min-width: 130px; flex-shrink: 0;
+  flex: 1;
 }
 .live-weight-card__label { font-size: .7rem; font-weight: 600; opacity: .65; margin-bottom: .2rem; text-transform: uppercase; letter-spacing: .04em; }
 .live-weight-card__val {
