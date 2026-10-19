@@ -205,7 +205,11 @@ function startListeners() {
   // Telemetria (peso, reservatório, status)
   const telRef = ref(db, `dosador/telemetria`);
   const unsubTel = onValue(telRef, snap => {
-    S.telemetria = snap.val() || {};
+    const dados = snap.val() || {};
+    // Se o Resetar acabou de forçar OCIOSO localmente, ignora snapshots que
+    // ainda trazem o erro antigo (podem chegar antes da gravação propagar)
+    if (S._ignorarErroTel && (dados.status_equipamento === 'ERRO_VAZIO' || dados.status_equipamento === 'ERRO_OBSTRUCAO' || dados.status_equipamento === 'ERRO_BALANCA')) return;
+    S.telemetria = dados;
     updateTelemetriaUI();
   });
   S.listeners.push(unsubTel);
@@ -495,6 +499,8 @@ function initFeedPage() {
     doFeed(qty);
   });
   document.getElementById('btn-reset-error')?.addEventListener('click', async () => {
+    // Bloqueia o onValue de sobrescrever o estado com o erro antigo
+    S._ignorarErroTel = true;
     // Esconde o banner imediatamente na UI
     const banner = document.getElementById('error-banner');
     if (banner) banner.hidden = true;
@@ -506,8 +512,12 @@ function initFeedPage() {
       toast('Status resetado', 'ok');
     } catch(e) {
       toast('Erro ao gravar no Firebase', 'err');
+      S._ignorarErroTel = false;
       if (banner) banner.hidden = false;
+      return;
     }
+    // Após 4s o Firebase já propagou o OCIOSO — volta a aceitar todos os snapshots
+    setTimeout(() => { S._ignorarErroTel = false; }, 4000);
   });
 
   // ── TARA REMOTA (zerar balança) ────────────────────────────────────────────
