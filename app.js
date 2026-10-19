@@ -215,14 +215,26 @@ function startListeners() {
   S.listeners.push(unsubTel);
 
   // Heartbeat (online/offline)
+  // Usa o offset do servidor Firebase para não depender do relógio do navegador.
+  // O SDK mantém S._serverOffset (ms) = horaServidor - horaNavegador.
   const hbRef = ref(db, `dosador/telemetria/ultimo_heartbeat`);
   const unsubHb = onValue(hbRef, snap => {
     const ts = snap.val();
     if (!ts) { setStatus('offline'); return; }
-    const diff = Date.now() - ts;
+    // .info/serverTimeOffset diz quantos ms o relógio do navegador está
+    // adiantado/atrasado em relação ao servidor — corrige a comparação.
+    const agoraServidor = Date.now() + (S._serverOffset || 0);
+    const diff = agoraServidor - ts;
     setStatus(diff < 65000 ? 'online' : 'offline');
   });
   S.listeners.push(unsubHb);
+
+  // Sincroniza offset do servidor uma vez ao iniciar os listeners
+  const offsetRef = ref(db, '.info/serverTimeOffset');
+  const unsubOffset = onValue(offsetRef, snap => {
+    S._serverOffset = snap.val() || 0;
+  });
+  S.listeners.push(unsubOffset);
 
   // Horários
   const horRef = ref(db, `users/${S.uid}/pets/${S.petId}/horarios`);
