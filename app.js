@@ -766,7 +766,7 @@ function renderHistorico() {
       <td><strong>${item.gramas || '—'}g</strong></td>
       <td><span class="badge ${cons ? 'badge--ok' : 'badge--no'}">${cons ? '✔ Sim' : '✘ Não'}</span></td>
       <td>${item.duracaoMin ? item.duracaoMin + ' min' : '—'}</td>
-      <td><span class="badge ${item.tipo === 'auto' ? 'badge--auto' : 'badge--man'}">${item.tipo === 'auto' ? 'Auto / Programado' : 'Manual'}</span></td>`;
+      <td><span class="badge ${item.tipo === 'auto' ? 'badge--auto' : 'badge--man'}">${item.tipo === 'auto' ? 'Programado' : 'Manual'}</span></td>`;
     tbody.appendChild(tr);
   });
 }
@@ -864,7 +864,7 @@ function exportExcel() {
     'Qtd liberada (g)':  c.gramas      || 0,
     'Consumido':         (c.consumido === true || c.consumido === 'true') ? 'Sim' : 'Não',
     'Tempo de consumo (min)': c.duracaoMin || 0,
-    'Tipo':              c.tipo === 'auto' ? 'Auto / Programado' : 'Manual',
+    'Tipo':              c.tipo === 'auto' ? 'Programado' : 'Manual',
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
@@ -908,7 +908,7 @@ function exportPDF() {
     y += 7; if (y > 270) { doc.addPage(); y = 20; }
     if (idx%2===1) { doc.setFillColor(248,250,252); doc.rect(14,y-4,182,7,'F'); }
     const ok  = item.consumido === true || item.consumido === 'true';
-    const row = [item.dataInicio||'',item.horaInicio||'',`${item.gramas||0}g`,ok?'Sim':'Não',item.duracaoMin?`${item.duracaoMin}min`:'—',item.tipo==='auto'?'Auto / Prog.':'Manual'];
+    const row = [item.dataInicio||'',item.horaInicio||'',`${item.gramas||0}g`,ok?'Sim':'Não',item.duracaoMin?`${item.duracaoMin}min`:'—',item.tipo==='auto'?'Programado':'Manual'];
     x = 14; row.forEach((v,i) => { doc.text(String(v),x+1,y); x+=colW[i]; });
   });
   for (let p=1; p<=doc.getNumberOfPages(); p++) {
