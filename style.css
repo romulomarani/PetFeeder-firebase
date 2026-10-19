@@ -577,35 +577,80 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
 
 /* ── AUTH ────────────────────────────────────────────────── */
 .auth-body {
-  display: flex; min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  min-height: 100dvh;
   background: var(--bg); padding: 0;
 }
-
-.auth-side {
-  display: none; width: 340px; flex-shrink: 0;
-  background: var(--text); padding: 2.25rem;
-  position: relative; overflow: hidden;
+@media (min-width: 860px) {
+  .auth-body { grid-template-columns: 340px 1fr; }
 }
-@media (min-width: 860px) { .auth-side { display: flex; align-items: center; } }
+@media (min-width: 1160px) {
+  .auth-body { grid-template-columns: 340px 1fr 280px; }
+}
+
+/* Coluna esquerda — sidebar escura com galeria */
+.auth-side {
+  display: none;
+  background: #0f172a;
+  padding: 2.25rem;
+  position: relative; overflow: hidden;
+  flex-direction: column; justify-content: center;
+}
+@media (min-width: 860px) { .auth-side { display: flex; } }
+
+.auth-side__gallery {
+  position: absolute; inset: 0;
+  z-index: 0;
+}
+
+.auth-side__overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(to bottom,
+    rgba(15,23,42,.55) 0%,
+    rgba(15,23,42,.72) 60%,
+    rgba(15,23,42,.90) 100%);
+}
 
 .auth-side__inner {
-  position: relative; z-index: 1; color: #fff;
+  position: relative; z-index: 2; color: #fff;
   display: flex; flex-direction: column; gap: 1.1rem;
 }
-.auth-side__logo  { font-size: 2.4rem; }
+
+.auth-side__logo-wrap { display: flex; align-items: center; }
+.auth-side__logo-img  { height: 52px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,.5)); }
+.auth-side__logo-emoji { font-size: 2.4rem; }
 .auth-side__title { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; }
 .auth-side__sub   { font-size: .84rem; opacity: .6; line-height: 1.6; }
 .auth-side__features { display: flex; flex-direction: column; gap: .5rem; margin-top: .25rem; }
 .auth-side__features li {
   display: flex; align-items: center; gap: 8px;
-  font-size: .82rem; opacity: .75;
-}
-.auth-side::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(circle at 80% 20%, rgba(37,99,235,.35) 0%, transparent 60%);
+  font-size: .82rem; opacity: .82;
 }
 
-.auth-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; }
+/* Coluna direita — galeria gatos */
+.auth-cat-col {
+  display: none;
+  position: relative; overflow: hidden;
+  background: #0f172a;
+}
+@media (min-width: 1160px) { .auth-cat-col { display: block; } }
+
+/* Imagens de galeria (colunas laterais) */
+.auth-side__gallery .auth-gallery__img,
+.auth-cat-col .auth-gallery__img {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity .9s ease;
+}
+.auth-side__gallery .auth-gallery__img.active,
+.auth-cat-col .auth-gallery__img.active { opacity: 1; }
+
+/* Coluna central — formulário */
+.auth-main { display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; }
 .auth-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--r-lg); box-shadow: var(--sh-lg);
@@ -614,6 +659,7 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
 }
 
 .auth-header { text-align: center; margin-bottom: .25rem; }
+.auth-logo-img { height: 56px; width: auto; object-fit: contain; margin-bottom: .4rem; display: block; margin-left: auto; margin-right: auto; }
 .auth-logo   { font-size: 2rem; display: block; margin-bottom: .4rem; }
 .auth-header h2 { font-size: 1.3rem; font-weight: 800; letter-spacing: -.02em; }
 .auth-header p  { color: var(--text-2); font-size: .82rem; margin-top: 3px; }
