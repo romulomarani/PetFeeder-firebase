@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <link rel="icon" type="image/png" href="assets/logo-cachorro.png"/>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PetFeeder — Criar conta</title>
@@ -12,15 +13,18 @@
 <body class="auth-body">
 
   <aside class="auth-side" aria-hidden="true">
+    <!-- GALERIA ESQUERDA: cachorros (dentro da sidebar) -->
+    <div class="pet-gallery pet-gallery--left" aria-hidden="true">
+      <div class="pet-gallery__track" id="gallery-left"></div>
+    </div>
     <div class="auth-side__inner">
-      <div class="auth-side__logo">🐾</div>
-      <h1 class="auth-side__title">PetFeeder</h1>
-      <p class="auth-side__sub">Configure sua conta em menos de 2 minutos.</p>
+      <img src="assets/logo-TCC.png" alt="PetFeeder" style="width:180px;max-width:100%;object-fit:contain;margin-bottom:1rem"/>
       <ul class="auth-side__features">
         <li><i class="ph ph-user-plus"></i> Crie seu perfil</li>
         <li><i class="ph ph-dog"></i> Cadastre seu pet</li>
         <li><i class="ph ph-clock"></i> Programe os horários</li>
-        <li><i class="ph ph-chart-bar"></i> Acompanhe o histórico</li>
+        <li><i class="ph ph-chart-line-up"></i> Histórico de consumo</li>
+        <li><i class="ph ph-warning-circle"></i> Alertas de nível do reservatório</li>
       </ul>
     </div>
   </aside>
@@ -132,6 +136,11 @@
 
     </div>
   </main>
+
+  <!-- GALERIA DIREITA: gatos — 3ª coluna do grid -->
+  <div class="pet-gallery pet-gallery--right" aria-hidden="true">
+    <div class="pet-gallery__track" id="gallery-right"></div>
+  </div>
 
   <script type="module">
     import { auth, db } from './firebase-config.js';
@@ -261,6 +270,45 @@
       });
 
     });
+  </script>
+  <!-- Galeria de pets -->
+  <script>
+    const dogsLeft = [
+      { url: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=600&q=80', pos: 'center 20%' },
+      { url: 'https://images.unsplash.com/photo-1601979031925-424e53b6caaa?w=600&q=80', pos: 'center 10%' },
+      { url: 'https://images.unsplash.com/photo-1558788353-f76d92427f16?w=600&q=80',    pos: 'center 10%' },
+      { url: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=600&q=80', pos: 'center 20%' },
+      { url: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&q=80',    pos: 'center 30%' },
+    ];
+    const catsRight = [
+      { url: 'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=600&q=80', pos: 'center 15%' },
+      { url: 'https://images.unsplash.com/photo-1548802673-380ab8ebc7b7?w=600&q=80',    pos: 'center 20%' },
+      { url: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=600&q=80', pos: 'center 20%' },
+      { url: 'https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&q=80',    pos: 'center 10%' },
+      { url: 'https://images.unsplash.com/photo-1533743983669-94fa5c4338ec?w=600&q=80', pos: 'center 10%' },
+    ];
+
+    function startGallery(id, items) {
+      const track = document.getElementById(id);
+      items.forEach(({ url, pos }, i) => {
+        const img = document.createElement('img');
+        img.src = url;
+        img.className = 'pet-gallery__img' + (i === 0 ? ' active' : '');
+        img.alt = '';
+        if (pos) img.style.objectPosition = pos;
+        track.appendChild(img);
+      });
+      let current = 0;
+      setInterval(() => {
+        const imgs = track.querySelectorAll('.pet-gallery__img');
+        imgs[current].classList.remove('active');
+        current = (current + 1) % imgs.length;
+        imgs[current].classList.add('active');
+      }, 3500);
+    }
+
+    startGallery('gallery-left', dogsLeft);
+    startGallery('gallery-right', catsRight);
   </script>
 </body>
 </html>
