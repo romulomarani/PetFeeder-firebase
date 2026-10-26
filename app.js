@@ -221,10 +221,10 @@ function startListeners() {
   const unsubHb = onValue(hbRef, snap => {
     const ts = snap.val();
     if (!ts) { setStatus('offline'); return; }
-    // .info/serverTimeOffset diz quantos ms o relógio do navegador está
-    // adiantado/atrasado em relação ao servidor — corrige a comparação.
+    // ESP32 grava em segundos Unix; Date.now() é milissegundos — converte ts para ms
+    const tsMs = ts < 1e12 ? ts * 1000 : ts;
     const agoraServidor = Date.now() + (S._serverOffset || 0);
-    const diff = agoraServidor - ts;
+    const diff = agoraServidor - tsMs;
     setStatus(diff < 65000 ? 'online' : 'offline');
   });
   S.listeners.push(unsubHb);
@@ -324,12 +324,18 @@ function updateTelemetriaUI() {
   const errBanner = document.getElementById('error-banner');
   const dispositivoOnline = document.getElementById('status-dot')?.classList.contains('online')
     || document.getElementById('status-dot-home')?.classList.contains('online');
-  if (dispositivoOnline && (t.status_equipamento === 'ERRO_VAZIO' || t.status_equipamento === 'ERRO_OBSTRUCAO')) {
-    document.getElementById('error-title').textContent = t.status_equipamento === 'ERRO_VAZIO'
-      ? 'Reservatório vazio' : 'Obstrução mecânica detectada';
-    document.getElementById('error-msg').textContent = t.status_equipamento === 'ERRO_VAZIO'
-      ? 'O silo ficou sem ração durante a dosagem. Reabasteça o reservatório e clique em Resetar.'
-      : 'O fuso não conseguiu transportar a ração. Verifique se há obstáculos e clique em Resetar.';
+  const erroAtivo = t.status_equipamento === 'ERRO_VAZIO'
+    || t.status_equipamento === 'ERRO_OBSTRUCAO'
+    || t.status_equipamento === 'ERRO_BALANCA';
+  if (dispositivoOnline && erroAtivo) {
+    const msgs = {
+      'ERRO_VAZIO':     { titulo: 'Reservatório vazio',            msg: 'O silo ficou sem ração durante a dosagem. Reabasteça o reservatório e clique em Resetar.' },
+      'ERRO_OBSTRUCAO': { titulo: 'Obstrução mecânica detectada',  msg: 'O fuso não conseguiu transportar a ração. Verifique se há obstáculos e clique em Resetar.' },
+      'ERRO_BALANCA':   { titulo: 'Falha na balança',              msg: 'O sensor de peso não respondeu corretamente. Verifique a célula de carga e clique em Resetar.' },
+    };
+    const m = msgs[t.status_equipamento] || { titulo: 'Erro detectado', msg: '' };
+    document.getElementById('error-title').textContent = m.titulo;
+    document.getElementById('error-msg').textContent   = m.msg;
     errBanner.hidden = false;
   } else {
     errBanner.hidden = true;
