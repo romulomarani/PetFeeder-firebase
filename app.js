@@ -223,15 +223,15 @@ function startListeners() {
     if (!ts) { setStatus('offline'); return; }
     const tsMs = ts < 1e12 ? ts * 1000 : ts;
     const agoraServidor = Date.now() + (S._serverOffset || 0);
-    setStatus(agoraServidor - tsMs < 65000 ? 'online' : 'offline');
+    setStatus(agoraServidor - tsMs < 8000 ? 'online' : 'offline');
   }
   const unsubHb = onValue(hbRef, snap => {
     S._lastHbTs = snap.val() || 0;
     avaliarHeartbeat(S._lastHbTs);
   });
   S.listeners.push(unsubHb);
-  // Reavalia a cada 10s para detectar desconexão sem nova escrita no Firebase
-  const hbInterval = setInterval(() => avaliarHeartbeat(S._lastHbTs || 0), 10000);
+  // Reavalia a cada 5s para detectar desconexão sem nova escrita no Firebase
+  const hbInterval = setInterval(() => avaliarHeartbeat(S._lastHbTs || 0), 5000);
   S.listeners.push(() => clearInterval(hbInterval));
 
   // Sincroniza offset do servidor uma vez ao iniciar os listeners
@@ -321,6 +321,7 @@ function updateTelemetriaUI() {
     'DISPENSANDO':      { cls: 'dispensing', ico: 'ph-spinner' },
     'ERRO_VAZIO':       { cls: 'error',      ico: 'ph-x-circle' },
     'ERRO_OBSTRUCAO':   { cls: 'error',      ico: 'ph-x-circle' },
+    'ERRO_BALANCA':     { cls: 'error',      ico: 'ph-x-circle' },
   };
   const st = stMap[t.status_equipamento] || { cls: 'idle', ico: 'ph-check-circle' };
   if (stEl) {
