@@ -215,19 +215,24 @@ function startListeners() {
   S.listeners.push(unsubTel);
 
   // Heartbeat (online/offline)
-  // Usa o offset do servidor Firebase para não depender do relógio do navegador.
-  // O SDK mantém S._serverOffset (ms) = horaServidor - horaNavegador.
+  // O listener atualiza S._lastHbTs quando o valor muda no Firebase.
+  // Um intervalo de 10s reavalia o status mesmo sem nova escrita do ESP32,
+  // garantindo que o dispositivo vá para offline quando para de enviar heartbeat.
   const hbRef = ref(db, `dosador/telemetria/ultimo_heartbeat`);
-  const unsubHb = onValue(hbRef, snap => {
-    const ts = snap.val();
+  function avaliarHeartbeat(ts) {
     if (!ts) { setStatus('offline'); return; }
-    // ESP32 grava em segundos Unix; Date.now() é milissegundos — converte ts para ms
     const tsMs = ts < 1e12 ? ts * 1000 : ts;
     const agoraServidor = Date.now() + (S._serverOffset || 0);
-    const diff = agoraServidor - tsMs;
-    setStatus(diff < 65000 ? 'online' : 'offline');
+    setStatus(agoraServidor - tsMs < 65000 ? 'online' : 'offline');
+  }
+  const unsubHb = onValue(hbRef, snap => {
+    S._lastHbTs = snap.val() || 0;
+    avaliarHeartbeat(S._lastHbTs);
   });
   S.listeners.push(unsubHb);
+  // Reavalia a cada 10s para detectar desconexão sem nova escrita no Firebase
+  const hbInterval = setInterval(() => avaliarHeartbeat(S._lastHbTs || 0), 10000);
+  S.listeners.push(() => clearInterval(hbInterval));
 
   // Sincroniza offset do servidor uma vez ao iniciar os listeners
   const offsetRef = ref(db, '.info/serverTimeOffset');
@@ -273,6 +278,7 @@ function startListeners() {
 }
 
 function setStatus(estado) {
+  S._dispositivoOnline = (estado === 'online');
   const txt = estado === 'online' ? 'Dispositivo online' : estado === 'offline' ? 'Dispositivo offline' : 'Conectando...';
   // Badge do nav (outras páginas)
   const dot = document.getElementById('status-dot');
@@ -284,6 +290,8 @@ function setStatus(estado) {
   const lblH = document.getElementById('status-label-home');
   if (dotH) dotH.className = `status-dot ${estado}`;
   if (lblH) lblH.textContent = txt;
+  // Re-avaliar banner sempre que o status mudar
+  updateTelemetriaUI();
 }
 
 function updateTelemetriaUI() {
@@ -322,8 +330,7 @@ function updateTelemetriaUI() {
 
   // Banner de erro — nunca mostra se dispositivo offline
   const errBanner = document.getElementById('error-banner');
-  const dispositivoOnline = document.getElementById('status-dot')?.classList.contains('online')
-    || document.getElementById('status-dot-home')?.classList.contains('online');
+  const dispositivoOnline = S._dispositivoOnline === true;
   const erroAtivo = t.status_equipamento === 'ERRO_VAZIO'
     || t.status_equipamento === 'ERRO_OBSTRUCAO'
     || t.status_equipamento === 'ERRO_BALANCA';
