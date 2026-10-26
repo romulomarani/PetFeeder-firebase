@@ -148,6 +148,7 @@ a  { text-decoration: none; color: inherit; }
   font-size: .72rem; font-weight: 600; color: var(--text-2);
   background: var(--surface);
 }
+.status-badge[hidden] { display: none; }
 .status-dot {
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--text-3); flex-shrink: 0; transition: background .3s;
