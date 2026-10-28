@@ -467,21 +467,24 @@ function updateDayDashboard() {
   // Monta dados por refeição (ordem cronológica)
   const sorted = [...refeicoes].sort((a, b) => (a.horaInicio || '').localeCompare(b.horaInicio || ''));
 
-  // Totais do dia
-  const totalLib  = sorted.reduce((s, c) => s + (parseFloat(c.gramas)    || 0), 0);
-  const totalCons = sorted.reduce((s, c) => {
+  // Gramas realmente ingeridas: usa o valor medido pelo ESP32 (gramas_consumidas).
+  // Registros antigos sem esse campo continuam usando o valor liberado.
+  const gramasIngeridas = c => {
     const cons = c.consumido === true || c.consumido === 'true' || c.consumido === 'TRUE';
-    return s + (cons ? (parseFloat(c.gramas) || 0) : 0);
-  }, 0);
+    if (!cons) return 0;
+    const g = parseFloat(c.gramas_consumidas);
+    return isNaN(g) ? (parseFloat(c.gramas) || 0) : g;
+  };
+
+  // Totais do dia
+  const totalLib  = sorted.reduce((s, c) => s + (parseFloat(c.gramas) || 0), 0);
+  const totalCons = sorted.reduce((s, c) => s + gramasIngeridas(c), 0);
 
   // Labels: TOTAL primeiro, depois cada refeição
   // Um label vazio ('') entre TOTAL e refeições cria espaço visual
-  const labels    = ['TOTAL', '', ...sorted.map(c => c.horaInicio || `R${sorted.indexOf(c)+1}`)];
-  const liberados = [totalLib,  null, ...sorted.map(c => parseFloat(c.gramas)    || 0)];
-  const consumidos = [totalCons, null, ...sorted.map(c => {
-    const cons = c.consumido === true || c.consumido === 'true' || c.consumido === 'TRUE';
-    return cons ? (parseFloat(c.gramas) || 0) : 0;
-  })];
+  const labels     = ['TOTAL', '', ...sorted.map(c => c.horaInicio || `R${sorted.indexOf(c)+1}`)];
+  const liberados  = [totalLib,  null, ...sorted.map(c => parseFloat(c.gramas) || 0)];
+  const consumidos = [totalCons, null, ...sorted.map(c => gramasIngeridas(c))];
 
   const canvas = document.getElementById('chart-day');
   if (!canvas || !window.Chart) return;
