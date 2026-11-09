@@ -433,13 +433,17 @@ function updateNextFeed() {
 function updateLastEvent() {
   const last = S.historico[0];
   if (!last) return;
-  const cons = last.consumido === true || last.consumido === 'true';
+  const cons    = last.consumido === true || last.consumido === 'true';
+  const scLast  = last.status_consumo || (cons ? 'sim' : 'nao');
   document.getElementById('c-last').textContent = last.horaInicio || '—';
-  document.getElementById('c-last-grams').textContent = `${last.gramas || '—'}g · ${cons ? 'Consumido' : 'Não consumido'}`;
+  const consLabel = scLast === 'parcial' ? 'Parcial' : (cons ? 'Consumido' : 'Não consumido');
+  const libLast   = last.quantidade_dispensada ?? last.gramas ?? '—';
+  document.getElementById('c-last-grams').textContent = `${libLast !== '—' ? libLast + 'g' : '—'} · ${consLabel}`;
 
   const evEl = document.getElementById('last-event');
   if (evEl) {
-    evEl.innerHTML = `<strong>${last.dataInicio} às ${last.horaInicio}</strong> — ${last.gramas || '—'}g liberados · ${cons ? '✅ Consumido' : '❌ Não consumido'}`;
+    const emojiCons = scLast === 'parcial' ? '⚠️' : (cons ? '✅' : '❌');
+    evEl.innerHTML = `<strong>${last.dataInicio} às ${last.horaInicio}</strong> — ${libLast !== '—' ? libLast + 'g' : '—'} liberados · ${emojiCons} ${consLabel}`;
   }
 }
 
@@ -467,24 +471,21 @@ function updateDayDashboard() {
   // Monta dados por refeição (ordem cronológica)
   const sorted = [...refeicoes].sort((a, b) => (a.horaInicio || '').localeCompare(b.horaInicio || ''));
 
-  // Gramas realmente ingeridas: usa o valor medido pelo ESP32 (gramas_consumidas).
-  // Registros antigos sem esse campo continuam usando o valor liberado.
-  const gramasIngeridas = c => {
-    const cons = c.consumido === true || c.consumido === 'true' || c.consumido === 'TRUE';
-    if (!cons) return 0;
-    const g = parseFloat(c.gramas_consumidas);
-    return isNaN(g) ? (parseFloat(c.gramas) || 0) : g;
-  };
-
   // Totais do dia
-  const totalLib  = sorted.reduce((s, c) => s + (parseFloat(c.gramas) || 0), 0);
-  const totalCons = sorted.reduce((s, c) => s + gramasIngeridas(c), 0);
+  const totalLib  = sorted.reduce((s, c) => s + (parseFloat(c.gramas)    || 0), 0);
+  const totalCons = sorted.reduce((s, c) => {
+    const cons = c.consumido === true || c.consumido === 'true' || c.consumido === 'TRUE';
+    return s + (cons ? (parseFloat(c.gramas) || 0) : 0);
+  }, 0);
 
   // Labels: TOTAL primeiro, depois cada refeição
   // Um label vazio ('') entre TOTAL e refeições cria espaço visual
-  const labels     = ['TOTAL', '', ...sorted.map(c => c.horaInicio || `R${sorted.indexOf(c)+1}`)];
-  const liberados  = [totalLib,  null, ...sorted.map(c => parseFloat(c.gramas) || 0)];
-  const consumidos = [totalCons, null, ...sorted.map(c => gramasIngeridas(c))];
+  const labels    = ['TOTAL', '', ...sorted.map(c => c.horaInicio || `R${sorted.indexOf(c)+1}`)];
+  const liberados = [totalLib,  null, ...sorted.map(c => parseFloat(c.gramas)    || 0)];
+  const consumidos = [totalCons, null, ...sorted.map(c => {
+    const cons = c.consumido === true || c.consumido === 'true' || c.consumido === 'TRUE';
+    return cons ? (parseFloat(c.gramas) || 0) : 0;
+  })];
 
   const canvas = document.getElementById('chart-day');
   if (!canvas || !window.Chart) return;
@@ -746,8 +747,9 @@ function applyFilters() {
   if (S.filtroStatus !== 'all') {
     data = data.filter(c => {
       const cons = c.consumido === true || c.consumido === 'true';
-      if (S.filtroStatus === 'consumido')     return cons;
-      if (S.filtroStatus === 'nao_consumido') return !cons;
+      const sc   = c.status_consumo || (cons ? 'sim' : 'nao');
+      if (S.filtroStatus === 'consumido')     return sc === 'sim' || sc === 'parcial';
+      if (S.filtroStatus === 'nao_consumido') return sc === 'nao';
       return true;
     });
   }
@@ -777,18 +779,45 @@ function renderHistorico() {
     return;
   }
   data.forEach(item => {
-    const cons = item.consumido === true || item.consumido === 'true';
-    const tr   = document.createElement('tr');
+    const cons    = item.consumido === true || item.consumido === 'true';
+    const sc      = item.status_consumo || (cons ? 'sim' : 'nao');  // retrocompat.
+    const parcial = sc === 'parcial';
+    const tr      = document.createElement('tr');
+
+    // Qtd liberada: usa quantidade_dispensada (novo) ou gramas (retrocompat.)
+    const liberada = item.quantidade_dispensada ?? item.gramas ?? '—';
+
+    // Qtd ingerida
     const ingerida = item.gramas_consumidas != null
       ? `<strong>${item.gramas_consumidas}g</strong>`
       : (cons ? '<span class="muted-val">—</span>' : '<span class="muted-val">0g</span>');
+
+    // Badge consumido: Sim / Parcial / Não
+    let badgeCons;
+    if (sc === 'sim')     badgeCons = `<span class="badge badge--ok">✔ Sim</span>`;
+    else if (parcial)     badgeCons = `<span class="badge badge--warn">⚠ Parcial</span>`;
+    else                  badgeCons = `<span class="badge badge--no">✘ Não</span>`;
+
+    // Tempo de consumo: lê duracaoSeg (novo) com fallback para duracaoMin*60
+    const seg = item.duracaoSeg != null ? item.duracaoSeg
+              : (item.duracaoMin ? item.duracaoMin * 60 : null);
+    let tempoStr = '—';
+    if (seg != null && seg > 0) {
+      if (seg < 60) tempoStr = `${seg}s`;
+      else {
+        const m = Math.floor(seg / 60);
+        const s = seg % 60;
+        tempoStr = s > 0 ? `${m}min ${s}s` : `${m}min`;
+      }
+    }
+
     tr.innerHTML = `
       <td>${item.dataInicio || '—'}</td>
       <td><strong>${item.horaInicio || '—'}</strong></td>
-      <td><strong>${item.gramas || '—'}g</strong></td>
+      <td><strong>${liberada !== '—' ? liberada + 'g' : '—'}</strong></td>
       <td>${ingerida}</td>
-      <td><span class="badge ${cons ? 'badge--ok' : 'badge--no'}">${cons ? '✔ Sim' : '✘ Não'}</span></td>
-      <td>${item.duracaoMin ? item.duracaoMin + ' min' : '—'}</td>
+      <td>${badgeCons}</td>
+      <td>${tempoStr}</td>
       <td><span class="badge ${item.tipo === 'auto' ? 'badge--auto' : 'badge--man'}">${item.tipo === 'auto' ? 'Programado' : 'Manual'}</span></td>`;
     tbody.appendChild(tr);
   });
@@ -799,10 +828,19 @@ function renderKPIs() {
   const consumidos = data.filter(c => c.consumido === true || c.consumido === 'true');
   const totalG    = data.reduce((s, c) => s + (parseFloat(c.gramas) || 0), 0);
   const rej       = data.length ? Math.round(((data.length - consumidos.length) / data.length) * 100) : 0;
-  const tempos    = consumidos.map(c => parseFloat(c.duracaoMin)).filter(Boolean);
-  const avgMinRaw = tempos.length ? tempos.reduce((a,b) => a+b,0)/tempos.length : null;
-  const avgTempo  = avgMinRaw != null
-    ? (() => { const m = Math.floor(avgMinRaw); const s = Math.round((avgMinRaw - m) * 60); return s > 0 ? `${m}min ${s}s` : `${m}min`; })()
+  // Ponto E: lê duracaoSeg (novo) com fallback para duracaoMin*60 (retrocompat.)
+  const temposSeg = consumidos.map(c =>
+    c.duracaoSeg != null ? c.duracaoSeg : (c.duracaoMin ? c.duracaoMin * 60 : null)
+  ).filter(v => v != null && v > 0);
+  const avgSegRaw = temposSeg.length ? temposSeg.reduce((a,b) => a+b,0)/temposSeg.length : null;
+  const avgTempo  = avgSegRaw != null
+    ? (() => {
+        const seg = Math.round(avgSegRaw);
+        if (seg < 60) return `${seg}s`;
+        const m = Math.floor(seg / 60);
+        const s = seg % 60;
+        return s > 0 ? `${m}min ${s}s` : `${m}min`;
+      })()
     : '—';
   const avgDaily  = data.length ? Math.round(totalG / 7) : 0;
 
@@ -886,8 +924,8 @@ function exportExcel() {
     'Horário':               c.horaInicio  || '',
     'Qtd liberada (g)':      c.gramas      || 0,
     'Qtd ingerida (g)':      c.gramas_consumidas != null ? c.gramas_consumidas : '',
-    'Consumido':             (c.consumido === true || c.consumido === 'true') ? 'Sim' : 'Não',
-    'Tempo de consumo (min)':c.duracaoMin || 0,
+    'Consumido':             c.status_consumo === 'parcial' ? 'Parcial' : ((c.consumido === true || c.consumido === 'true') ? 'Sim' : 'Não'),
+    'Tempo de consumo':      (() => { const seg = c.duracaoSeg ?? (c.duracaoMin ? c.duracaoMin*60 : null); if (!seg || seg <= 0) return '—'; if (seg < 60) return `${seg}s`; const m=Math.floor(seg/60),s=seg%60; return s>0?`${m}min ${s}s`:`${m}min`; })(),
     'Tipo':                  c.tipo === 'auto' ? 'Programado' : 'Manual',
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
@@ -932,8 +970,13 @@ function exportPDF() {
     y += 7; if (y > 270) { doc.addPage(); y = 20; }
     if (idx%2===1) { doc.setFillColor(248,250,252); doc.rect(14,y-4,182,7,'F'); }
     const ok  = item.consumido === true || item.consumido === 'true';
+    const scPdf = item.status_consumo || (ok ? 'sim' : 'nao');
     const ing = item.gramas_consumidas != null ? `${item.gramas_consumidas}g` : '—';
-    const row = [item.dataInicio||'',item.horaInicio||'',`${item.gramas||0}g`,ing,ok?'Sim':'Não',item.duracaoMin?`${item.duracaoMin}min`:'—',item.tipo==='auto'?'Programado':'Manual'];
+    const libPdf = item.quantidade_dispensada ?? item.gramas ?? 0;
+    const segPdf = item.duracaoSeg ?? (item.duracaoMin ? item.duracaoMin*60 : null);
+    const tmpPdf = segPdf && segPdf > 0 ? (segPdf < 60 ? `${segPdf}s` : `${Math.floor(segPdf/60)}min${segPdf%60>0?' '+(segPdf%60)+'s':''}`) : '—';
+    const consPdf = scPdf === 'parcial' ? 'Parcial' : (ok ? 'Sim' : 'Não');
+    const row = [item.dataInicio||'',item.horaInicio||'',`${libPdf}g`,ing,consPdf,tmpPdf,item.tipo==='auto'?'Programado':'Manual'];
     x = 14; row.forEach((v,i) => { doc.text(String(v),x+1,y); x+=colW[i]; });
   });
   for (let p=1; p<=doc.getNumberOfPages(); p++) {

@@ -148,7 +148,6 @@ a  { text-decoration: none; color: inherit; }
   font-size: .72rem; font-weight: 600; color: var(--text-2);
   background: var(--surface);
 }
-.status-badge[hidden] { display: none; }
 .status-dot {
   width: 8px; height: 8px; border-radius: 50%;
   background: var(--text-3); flex-shrink: 0; transition: background .3s;
@@ -334,8 +333,7 @@ a  { text-decoration: none; color: inherit; }
   font-size: .75rem; font-weight: 700; flex-shrink: 0;
   margin-top: 2px; transition: filter .15s;
 }
-.error-banner__reset:hover { filter: brightness(1.1); } 
-.error-banner[hidden] { display: none; }
+.error-banner__reset:hover { filter: brightness(1.1); }
 
 /* Último evento */
 .last-event {
@@ -555,9 +553,10 @@ input[type="time"].form-input { font-family: var(--mono); font-size: 1rem; }
 
 /* Badges */
 .badge { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 99px; font-size: .68rem; font-weight: 700; }
-.badge--ok  { background: var(--green-lt);  color: var(--green); }
-.badge--no  { background: var(--red-lt);    color: var(--red); }
-.badge--auto{ background: var(--blue-lt);   color: var(--blue); }
+.badge--ok   { background: var(--green-lt);  color: var(--green); }
+.badge--no   { background: var(--red-lt);    color: var(--red); }
+.badge--warn { background: #fff8e1;          color: #c77700; }     /* Parcial */
+.badge--auto { background: var(--blue-lt);   color: var(--blue); }
 .badge--man { background: var(--bg);        color: var(--text-2); border: 1px solid var(--border); }
 
 /* ── MODAIS ──────────────────────────────────────────────── */
