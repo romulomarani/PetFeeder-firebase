@@ -298,7 +298,7 @@ function updateTelemetriaUI() {
   const t = S.telemetria;
 
   // Peso ao vivo
-  const peso = typeof t.peso_atual === 'number' ? t.peso_atual.toFixed(1) : '—';
+  const peso = typeof t.peso_atual === 'number' ? Math.round(t.peso_atual).toString() : '—';
   document.getElementById('live-weight').textContent = peso;
 
   // Reservatório
@@ -527,7 +527,7 @@ function updateDayDashboard() {
         legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } },
         tooltip: {
           callbacks: {
-            label: ctx => ctx.parsed.x != null ? `${ctx.dataset.label}: ${ctx.parsed.x.toFixed(1)}g` : '',
+            label: ctx => ctx.parsed.x != null ? `${ctx.dataset.label}: ${Math.round(ctx.parsed.x)}g` : '',
           },
         },
       },
@@ -785,11 +785,12 @@ function renderHistorico() {
     const tr      = document.createElement('tr');
 
     // Qtd liberada: usa quantidade_dispensada (novo) ou gramas (retrocompat.)
-    const liberada = item.quantidade_dispensada ?? item.gramas ?? '—';
+    const _lib = item.quantidade_dispensada ?? item.gramas;
+    const liberada = _lib != null ? Math.round(parseFloat(_lib)) : '—';
 
     // Qtd ingerida
     const ingerida = item.gramas_consumidas != null
-      ? `<strong>${item.gramas_consumidas}g</strong>`
+      ? `<strong>${Math.round(parseFloat(item.gramas_consumidas))}g</strong>`
       : (cons ? '<span class="muted-val">—</span>' : '<span class="muted-val">0g</span>');
 
     // Badge consumido: Sim / Parcial / Não
@@ -922,8 +923,8 @@ function exportExcel() {
   const rows = data.map(c => ({
     'Data':                  c.dataInicio  || '',
     'Horário':               c.horaInicio  || '',
-    'Qtd liberada (g)':      c.gramas      || 0,
-    'Qtd ingerida (g)':      c.gramas_consumidas != null ? c.gramas_consumidas : '',
+    'Qtd liberada (g)':      c.gramas != null ? Math.round(parseFloat(c.gramas)) : 0,
+    'Qtd ingerida (g)':      c.gramas_consumidas != null ? Math.round(parseFloat(c.gramas_consumidas)) : '',
     'Consumido':             c.status_consumo === 'parcial' ? 'Parcial' : ((c.consumido === true || c.consumido === 'true') ? 'Sim' : 'Não'),
     'Tempo de consumo':      (() => { const seg = c.duracaoSeg ?? (c.duracaoMin ? c.duracaoMin*60 : null); if (!seg || seg <= 0) return '—'; if (seg < 60) return `${seg}s`; const m=Math.floor(seg/60),s=seg%60; return s>0?`${m}min ${s}s`:`${m}min`; })(),
     'Tipo':                  c.tipo === 'auto' ? 'Programado' : 'Manual',
@@ -972,7 +973,7 @@ function exportPDF() {
     const ok  = item.consumido === true || item.consumido === 'true';
     const scPdf = item.status_consumo || (ok ? 'sim' : 'nao');
     const ing = item.gramas_consumidas != null ? `${item.gramas_consumidas}g` : '—';
-    const libPdf = item.quantidade_dispensada ?? item.gramas ?? 0;
+    const libPdf = Math.round(parseFloat(item.quantidade_dispensada ?? item.gramas ?? 0));
     const segPdf = item.duracaoSeg ?? (item.duracaoMin ? item.duracaoMin*60 : null);
     const tmpPdf = segPdf && segPdf > 0 ? (segPdf < 60 ? `${segPdf}s` : `${Math.floor(segPdf/60)}min${segPdf%60>0?' '+(segPdf%60)+'s':''}`) : '—';
     const consPdf = scPdf === 'parcial' ? 'Parcial' : (ok ? 'Sim' : 'Não');
